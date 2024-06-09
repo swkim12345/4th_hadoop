@@ -52,7 +52,6 @@ public class DSC {
                         while ((line = br.readLine()) != null) {
                             System.out.println(line);
                             outputStream.writeBytes(line);
-
                         }
                     } finally {
                         IOUtils.closeStream(br);
@@ -79,14 +78,14 @@ public class DSC {
      *  1: 60분 이내의 데이터를 시간 정보와 함께 직렬화.
      * 1.
      */
-        public static class MyMapper
-                extends Mapper<Object, Text, Text, Text> {
-            private Text word = new Text();
-
-            public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-
-            }
-        }
+//        public static class MyMapper
+//                extends Mapper<Object, Text, Text, Text> {
+//            private Text word = new Text();
+//
+//            public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+//
+//            }
+//        }
 
     /**
      * Reducer
@@ -95,17 +94,17 @@ public class DSC {
      * 이 줄들을 분석한 다음, 변동률, 수익률을 가지고 나이브한 형식으로 value에 작성함.
      * output : key : dart에서 분석한 호재, 악재, value : 주식 가격의 변동률, 수익률, 얼마나 작용한지
      */
-        public static class MyReducer
-                extends Reducer<Text, Text, Text, Text> {
-            protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-
-            }
-
-            /**
-             * Afterprocessing
-             * 1. 구현하지 않는다.
-             */
-        }
+//        public static class MyReducer
+//                extends Reducer<Text, Text, Text, Text> {
+//            protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+//
+//            }
+//
+//            /**
+//             * Afterprocessing
+//             * 1. 구현하지 않는다.
+//             */
+//        }
 
     public static void main(String[] args) throws Exception {
         String inputFolder = args[0];
