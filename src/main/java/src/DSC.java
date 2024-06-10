@@ -158,10 +158,20 @@ public class DSC {
                                     future_now = future_now.plusDays(1);
                                     System.out.println(prev_now.format(folder_formatter));
                                 }
+
+                                //TODO : error in this code
                                 if (hour < 9 || (hour == 9 && minute < 30) || hour >= 15 || (hour == 14 && minute < 50))
                                 {
                                     prev_now = prev_now.withHour(15).withMinute(20).withSecond(0).withNano(0);
                                     future_now = future_now.withHour(9).withMinute(0).withSecond(0).withNano(0);
+                                    while (isWeekday(prev_now))
+                                    {
+                                        prev_now = prev_now.minusDays(1);
+                                    }
+                                    while (isWeekday(future_now))
+                                    {
+                                        future_now = future_now.plusDays(1);
+                                    }
                                 }
                                 String prev_str = getDir(new String[]{inputFolder, prev_now.format(folder_formatter)});
                                 String future_str = getDir(new String[]{inputFolder, future_now.format(folder_formatter)});
@@ -170,7 +180,7 @@ public class DSC {
 
                                 System.out.println("prev_str" + prev_str);
                                 System.out.println("future_str" + future_str);
-                                String stock_code_format = String.format("%06", Integer.parseInt(stock_code));
+                                String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
                                 //실제 파일이 존재하는 지 확인하는 코드
                                 Path prev_kospi_path = new Path(getDir(new String[]{prev_str, kosdaq, stock_code_format}) + ".csv");
                                 Path prev_kosdaq_path = new Path(getDir(new String[]{prev_str, kospi, stock_code_format}) + ".csv");
@@ -190,7 +200,7 @@ public class DSC {
                                 Path output_file;
                                 for (int i = 0; ; i++)
                                 {
-                                    output_file = new Path(outputFolder + '/' + stock_code + "_" + i);
+                                    output_file = new Path(outputFolder + '/' + stock_code_format + "_" + i);
                                     if (fs.exists(output_file) == false) {
                                         break;
                                     }
