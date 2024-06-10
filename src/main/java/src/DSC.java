@@ -4,15 +4,57 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
-import org.apache.hadoop.mapreduce.lib.input.*;
-import org.apache.hadoop.mapreduce.lib.output.*;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 
 public class DSC {
+
+    // 날짜가 평일인지 주말인지 확인하는 메서드
+    public static boolean isWeekday(LocalDateTime dateTime) {
+        DayOfWeek dayOfWeek = dateTime.getDayOfWeek();
+        return !(dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY);
+    }
+
+    public static void inputToList(Path path, long diff, FileSystem fs, ArrayList<String> write_list, boolean before)
+            throws IOException
+    {
+        if (fs.exists(path)) {
+            BufferedReader read_csv_br = new BufferedReader(new InputStreamReader(fs.open(path)));
+            String read_csv_line = read_csv_br.readLine();
+            if (before == true)
+            {
+                for (int i = 0; i < diff; i++) {
+                    read_csv_line = read_csv_br.readLine();
+                    if (read_csv_line == null)
+                        break ;
+                    if (i <= diff - 30)
+                    {
+                        //TODO : add list
+                        write_list.add(read_csv_line);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < diff + 30; i++) {
+                    read_csv_line = read_csv_br.readLine();
+                    if (read_csv_line == null)
+                        break ;
+                    if (i <= diff + 30)
+                    {
+                        write_list.add(read_csv_line);
+                    }
+                }
+            }
+        }
+    }
+
 
     /**
      * Preprocessing
@@ -36,6 +78,8 @@ public class DSC {
         Path daFolder = new Path(dartFolder);
         Path outFolder = new Path(outputFolder);
 
+        LocalDateTime startTime = LocalDateTime.of(2023, 1,1,9,0);
+
         FSDataOutputStream outputStream = fs.create(outFolder);
         if (fs.exists(daFolder)) {
             FileStatus[] fileStatus = fs.listStatus(daFolder);
@@ -48,10 +92,95 @@ public class DSC {
                     try {
                         inputStream = fs.open(dartFile);
                         br = new BufferedReader(new InputStreamReader(inputStream));
-                        String line;
+                        //첫번째의 경우는 스킵.
+                        String line = br.readLine();
                         while ((line = br.readLine()) != null) {
-                            System.out.println(line);
-                            outputStream.writeBytes(line);
+//                            System.out.println(line);
+                            //combined_output.csv v파일 구조
+                            /**
+                             * 주식코드
+                             * corp_code, corp_name, stock_code, report_num, rcept_no, recpt_dt, time, 호재성
+                             * 실재 필요한 것은 stock_code, rcept_dt, time, 호재성(TRUE, FALSE);
+                             * 0부터 시작하면 2, 5,6,7
+                             */
+                            String stock_code = line.split(",")[2];
+                            String rcept_dt = line.split(",")[5];
+                            String time = line.split(",")[6];
+                            String hoze = line.split(",")[7];
+                            if (stock_code.length() == 0 || rcept_dt.length() == 0 || time.length() == 0 || hoze.length() == 0) {
+                                continue ;
+                            }
+                            else
+                            {
+                                ArrayList<String> write_list = new ArrayList<>();
+                                write_list.add(hoze);
+                                //TODO : find file
+                                /**
+                                 * 날짜, 시간, 파일 이름순
+                                 */
+                                /**
+                                 * 분봉 csv파일 형식
+                                 * prdy_vrss,prdy_vrss_sign,prdy_ctrt,stck_prdy_clpr,acml_vol,acml_tr_pbmn,hts_kor_isnm,stck_prpr,stck_bsop_date,stck_cntg_hour,stck_prpr,stck_oprc,stck_hgpr,stck_lwpr,cntg_vol,acml_tr_pbmn
+                                 * (날짜(20230412)8, (시간 : 090000)9, (현재가)10, (1분간 거래량)14
+                                 */
+                                Integer hour = Integer.parseInt( time.split(":")[0]);
+                                Integer minute = Integer.parseInt(time.split(":")[1]);
+                                Integer year = Integer.parseInt(rcept_dt.substring(0, 4));
+                                Integer month = Integer.parseInt(rcept_dt.substring(4, 6));
+                                Integer day = Integer.parseInt(rcept_dt.substring(6, 8));
+                                DateTimeFormatter folder_formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd");
+                                LocalDateTime now = LocalDateTime.of(year, month, day, hour, minute);
+                                LocalDateTime prev_now = now;
+                                LocalDateTime future_now = now;
+                                /**
+                                 * hour가 9시 이전 혹은 9시 반 이전일 경우 / 15시 이후 혹은 14시 50분 초과일 경우
+                                 */
+                                while (isWeekday(prev_now))
+                                {
+                                    prev_now = now.minusDays(1);
+                                }
+                                while (isWeekday(future_now))
+                                {
+                                    future_now = future_now.plusDays(1);
+                                }
+                                if (hour <= 9 || (hour == 9 && minute < 30) || hour >= 3 || (hour == 2 && minute < 50))
+                                {
+                                    prev_now = prev_now.withHour(15).withMinute(20).withSecond(0).withNano(0);
+                                    future_now = future_now.withHour(9).withMinute(0).withSecond(0).withNano(0);
+                                }
+                                String prev_str = inputFolder + prev_now.format(folder_formatter);
+                                String future_str = inputFolder + future_now.format(folder_formatter);
+                                String kospi = "kospi";
+                                String kosdaq = "kosdaq";
+
+                                //실제 파일이 존재하는 지 확인하는 코드
+                                Path prev_kospi_path = new Path(prev_str + '/' + kospi + '/' + stock_code);
+                                Path prev_kosdaq_path = new Path(prev_str + '/' + kospi + '/' + stock_code);
+                                Path future_kospi_path = new Path(future_str + '/' + kosdaq + '/' + stock_code);
+                                Path future_kosdaq_path = new Path(future_str + '/' + kospi + '/' + stock_code);
+                                long diff = Duration.between(startTime, prev_now).toMinutes();
+                                inputToList(prev_kospi_path, diff, fs, write_list, true);
+                                inputToList(prev_kosdaq_path, diff, fs, write_list, true);
+                                inputToList(future_kospi_path, diff, fs, write_list, false);
+                                inputToList(future_kosdaq_path, diff, fs, write_list, false);
+
+                                //TODO : write output file
+                                Path output_file;
+                                for (int i = 0; ; i++)
+                                {
+                                    output_file = new Path(outputFolder + '/' + stock_code + "_0");
+                                    if (fs.exists(output_file) == false) {
+                                        break;
+                                    }
+                                }
+                                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(output_file)));
+                                for (String l : write_list) {
+                                    writer.write(l);
+                                    writer.newLine();
+                                }
+                                writer.close();
+                                System.out.println("파일 작성 완료 : " + output_file);
+                            }
                         }
                     } finally {
                         IOUtils.closeStream(br);
@@ -78,14 +207,14 @@ public class DSC {
      *  1: 60분 이내의 데이터를 시간 정보와 함께 직렬화.
      * 1.
      */
-//        public static class MyMapper
-//                extends Mapper<Object, Text, Text, Text> {
-//            private Text word = new Text();
-//
-//            public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-//
-//            }
-//        }
+        public static class MyMapper
+                extends Mapper<Object, Text, Text, Text> {
+            private Text word = new Text();
+
+            public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+
+            }
+        }
 
     /**
      * Reducer
@@ -94,17 +223,17 @@ public class DSC {
      * 이 줄들을 분석한 다음, 변동률, 수익률을 가지고 나이브한 형식으로 value에 작성함.
      * output : key : dart에서 분석한 호재, 악재, value : 주식 가격의 변동률, 수익률, 얼마나 작용한지
      */
-//        public static class MyReducer
-//                extends Reducer<Text, Text, Text, Text> {
-//            protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-//
-//            }
-//
-//            /**
-//             * Afterprocessing
-//             * 1. 구현하지 않는다.
-//             */
-//        }
+        public static class MyReducer
+                extends Reducer<Text, Text, Text, Text> {
+            protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+
+            }
+
+            /**
+             * Afterprocessing
+             * 1. 구현하지 않는다.
+             */
+        }
 
     public static void main(String[] args) throws Exception {
         String inputFolder = args[0];
