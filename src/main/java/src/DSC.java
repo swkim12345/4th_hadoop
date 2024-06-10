@@ -7,7 +7,6 @@ import org.apache.hadoop.mapreduce.*;
 
 import java.io.*;
 import java.time.DayOfWeek;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -39,7 +38,7 @@ public class DSC {
         if (fs.exists(path)) {
             BufferedReader read_csv_br = new BufferedReader(new InputStreamReader(fs.open(path)));
             String read_csv_line = read_csv_br.readLine();
-            if (before == true)
+            if (before)
             {
                 for (int i = 0; i < diff; i++) {
                     read_csv_line = read_csv_br.readLine();
@@ -122,8 +121,7 @@ public class DSC {
                             System.out.println("rcept_dt : " + rcept_dt);
                             System.out.println("time : " + time);
                             System.out.println("hoze : " + hoze);
-                            if (stock_code.length() == 0 || rcept_dt.length() == 0 || time.length() == 0 || hoze.length() == 0) {
-                                continue ;
+                            if (stock_code.isEmpty() || rcept_dt.isEmpty() || time.isEmpty() || hoze.isEmpty()) {
                             }
                             else
                             {
@@ -160,7 +158,7 @@ public class DSC {
                                     future_now = future_now.plusDays(1);
                                     System.out.println(prev_now.format(folder_formatter));
                                 }
-                                if (hour <= 9 || (hour == 9 && minute < 30) || hour >= 3 || (hour == 2 && minute < 50))
+                                if (hour < 9 || (hour == 9 && minute < 30) || hour >= 15 || (hour == 14 && minute < 50))
                                 {
                                     prev_now = prev_now.withHour(15).withMinute(20).withSecond(0).withNano(0);
                                     future_now = future_now.withHour(9).withMinute(0).withSecond(0).withNano(0);
