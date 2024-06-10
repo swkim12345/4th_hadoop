@@ -87,11 +87,10 @@ public class DSC {
         //폴더를 읽어 처리하는 파일
         Path inFolder = new Path(inputFolder);
         Path daFolder = new Path(dartFolder);
-        Path outFolder = new Path(outputFolder);
 
         LocalDateTime startTime = LocalDateTime.of(2023, 1,1,9,0);
 
-        FSDataOutputStream outputStream = fs.create(outFolder);
+//        FSDataOutputStream outputStream = fs.create(outFolder);
         if (fs.exists(daFolder)) {
             FileStatus[] fileStatus = fs.listStatus(daFolder);
             for (FileStatus status : fileStatus) {
@@ -177,9 +176,12 @@ public class DSC {
                                 Path prev_kosdaq_path = new Path(getDir(new String[]{prev_str, kospi, stock_code}));
                                 Path future_kospi_path = new Path(getDir(new String[]{future_str, kosdaq, stock_code}));
                                 Path future_kosdaq_path = new Path(getDir(new String[]{future_str, kospi, stock_code}));
-                                long diff = Duration.between(startTime, prev_now).toMinutes();
+                                long diff = Duration.between(prev_now, startTime).toMinutes();
+                                System.out.println("diff : " + diff);
                                 inputToList(prev_kospi_path, diff, fs, write_list, true);
                                 inputToList(prev_kosdaq_path, diff, fs, write_list, true);
+                                diff = Duration.between(future_now, startTime).toMinutes();
+                                System.out.println("diff : " + diff);
                                 inputToList(future_kospi_path, diff, fs, write_list, false);
                                 inputToList(future_kosdaq_path, diff, fs, write_list, false);
 
@@ -208,7 +210,7 @@ public class DSC {
                 }
             }
         }
-        outputStream.close();
+//        outputStream.close();
         fs.close();
     }
 
