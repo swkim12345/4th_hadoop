@@ -35,6 +35,7 @@ public class DSC {
     public static void inputToList(Path path, long diff, FileSystem fs, ArrayList<String> write_list, boolean before)
             throws IOException
     {
+        System.out.println("path : " + path.toString());
         if (fs.exists(path)) {
             BufferedReader read_csv_br = new BufferedReader(new InputStreamReader(fs.open(path)));
             String read_csv_line = read_csv_br.readLine();
@@ -176,7 +177,7 @@ public class DSC {
                                 Path prev_kosdaq_path = new Path(getDir(new String[]{prev_str, kospi, stock_code}));
                                 Path future_kospi_path = new Path(getDir(new String[]{future_str, kosdaq, stock_code}));
                                 Path future_kosdaq_path = new Path(getDir(new String[]{future_str, kospi, stock_code}));
-//                                long diff = Duration.between(prev_now, startTime).toMinutes();
+
                                 long diff = (prev_now.getHour() - 9 )* 60 + prev_now.getMinute();
                                 System.out.println("diff : " + diff);
                                 inputToList(prev_kospi_path, diff, fs, write_list, true);
