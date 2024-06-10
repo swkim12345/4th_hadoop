@@ -172,11 +172,12 @@ public class DSC {
 
                                 System.out.println("prev_str" + prev_str);
                                 System.out.println("future_str" + future_str);
+                                String stock_code_format = String.format("%06", Integer.parseInt(stock_code));
                                 //실제 파일이 존재하는 지 확인하는 코드
-                                Path prev_kospi_path = new Path(getDir(new String[]{prev_str, kosdaq, stock_code}));
-                                Path prev_kosdaq_path = new Path(getDir(new String[]{prev_str, kospi, stock_code}));
-                                Path future_kospi_path = new Path(getDir(new String[]{future_str, kosdaq, stock_code}));
-                                Path future_kosdaq_path = new Path(getDir(new String[]{future_str, kospi, stock_code}));
+                                Path prev_kospi_path = new Path(getDir(new String[]{prev_str, kosdaq, stock_code_format}) + ".csv");
+                                Path prev_kosdaq_path = new Path(getDir(new String[]{prev_str, kospi, stock_code_format}) + ".csv");
+                                Path future_kospi_path = new Path(getDir(new String[]{future_str, kosdaq, stock_code_format}) + ".csv");
+                                Path future_kosdaq_path = new Path(getDir(new String[]{future_str, kospi, stock_code_format}) + ".csv");
 
                                 long diff = (prev_now.getHour() - 9 )* 60 + prev_now.getMinute();
                                 System.out.println("diff : " + diff);
