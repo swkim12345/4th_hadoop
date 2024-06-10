@@ -17,7 +17,7 @@ public class DSC {
 
     public static boolean isWeekday(LocalDateTime dateTime) {
         DayOfWeek dayOfWeek = dateTime.getDayOfWeek();
-        return !(dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY);
+        return (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY);
     }
 
     public static void inputToList(Path path, long diff, FileSystem fs, ArrayList<String> write_list, boolean before)
@@ -141,10 +141,12 @@ public class DSC {
                                 while (isWeekday(prev_now))
                                 {
                                     prev_now = now.minusDays(1);
+                                    System.out.println(prev_now.format(folder_formatter);
                                 }
                                 while (isWeekday(future_now))
                                 {
                                     future_now = future_now.plusDays(1);
+                                    System.out.println(prev_now.format(folder_formatter);
                                 }
                                 if (hour <= 9 || (hour == 9 && minute < 30) || hour >= 3 || (hour == 2 && minute < 50))
                                 {
