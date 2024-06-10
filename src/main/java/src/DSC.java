@@ -1,4 +1,4 @@
-package src;
+//package src;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
@@ -15,7 +15,6 @@ import java.util.ArrayList;
 
 public class DSC {
 
-    // 날짜가 평일인지 주말인지 확인하는 메서드
     public static boolean isWeekday(LocalDateTime dateTime) {
         DayOfWeek dayOfWeek = dateTime.getDayOfWeek();
         return !(dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY);
@@ -168,7 +167,7 @@ public class DSC {
                                 Path output_file;
                                 for (int i = 0; ; i++)
                                 {
-                                    output_file = new Path(outputFolder + '/' + stock_code + "_0");
+                                    output_file = new Path(outputFolder + '/' + stock_code + "_" + i);
                                     if (fs.exists(output_file) == false) {
                                         break;
                                     }
