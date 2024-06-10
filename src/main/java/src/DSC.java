@@ -20,6 +20,18 @@ public class DSC {
         return (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY);
     }
 
+    public static String getDir(String[] input)
+    {
+        String ret = new String();
+        for (String in : input)
+        {
+            ret = ret.concat("/");
+            ret = ret.concat(in);
+        }
+        return (ret);
+    }
+
+
     public static void inputToList(Path path, long diff, FileSystem fs, ArrayList<String> write_list, boolean before)
             throws IOException
     {
@@ -141,30 +153,30 @@ public class DSC {
                                 while (isWeekday(prev_now))
                                 {
                                     prev_now = now.minusDays(1);
-                                    System.out.println(prev_now.format(folder_formatter);
+                                    System.out.println(prev_now.format(folder_formatter));
                                 }
                                 while (isWeekday(future_now))
                                 {
                                     future_now = future_now.plusDays(1);
-                                    System.out.println(prev_now.format(folder_formatter);
+                                    System.out.println(prev_now.format(folder_formatter));
                                 }
                                 if (hour <= 9 || (hour == 9 && minute < 30) || hour >= 3 || (hour == 2 && minute < 50))
                                 {
                                     prev_now = prev_now.withHour(15).withMinute(20).withSecond(0).withNano(0);
                                     future_now = future_now.withHour(9).withMinute(0).withSecond(0).withNano(0);
                                 }
-                                String prev_str = inputFolder + prev_now.format(folder_formatter);
-                                String future_str = inputFolder + future_now.format(folder_formatter);
+                                String prev_str = getDir(new String[]{inputFolder, prev_now.format(folder_formatter)});
+                                String future_str = getDir(new String[]{inputFolder, future_now.format(folder_formatter)});
                                 String kospi = "kospi";
                                 String kosdaq = "kosdaq";
 
                                 System.out.println("prev_str" + prev_str);
                                 System.out.println("future_str" + future_str);
                                 //실제 파일이 존재하는 지 확인하는 코드
-                                Path prev_kospi_path = new Path(prev_str + '/' + kospi + '/' + stock_code);
-                                Path prev_kosdaq_path = new Path(prev_str + '/' + kospi + '/' + stock_code);
-                                Path future_kospi_path = new Path(future_str + '/' + kosdaq + '/' + stock_code);
-                                Path future_kosdaq_path = new Path(future_str + '/' + kospi + '/' + stock_code);
+                                Path prev_kospi_path = new Path(getDir(new String[]{prev_str, kosdaq, stock_code}));
+                                Path prev_kosdaq_path = new Path(getDir(new String[]{prev_str, kospi, stock_code}));
+                                Path future_kospi_path = new Path(getDir(new String[]{future_str, kosdaq, stock_code}));
+                                Path future_kosdaq_path = new Path(getDir(new String[]{future_str, kospi, stock_code}));
                                 long diff = Duration.between(startTime, prev_now).toMinutes();
                                 inputToList(prev_kospi_path, diff, fs, write_list, true);
                                 inputToList(prev_kosdaq_path, diff, fs, write_list, true);
