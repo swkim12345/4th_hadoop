@@ -106,6 +106,10 @@ public class DSC {
                             String rcept_dt = line.split(",")[5];
                             String time = line.split(",")[6];
                             String hoze = line.split(",")[7];
+                            System.out.println("stock_code : " + stock_code);
+                            System.out.println("rcept_dt : " + rcept_dt);
+                            System.out.println("time : " + time);
+                            System.out.println("hoze : " + hoze);
                             if (stock_code.length() == 0 || rcept_dt.length() == 0 || time.length() == 0 || hoze.length() == 0) {
                                 continue ;
                             }
@@ -152,6 +156,8 @@ public class DSC {
                                 String kospi = "kospi";
                                 String kosdaq = "kosdaq";
 
+                                System.out.println("prev_str" + prev_str);
+                                System.out.println("future_str" + future_str);
                                 //실제 파일이 존재하는 지 확인하는 코드
                                 Path prev_kospi_path = new Path(prev_str + '/' + kospi + '/' + stock_code);
                                 Path prev_kosdaq_path = new Path(prev_str + '/' + kospi + '/' + stock_code);
