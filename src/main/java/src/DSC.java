@@ -44,9 +44,8 @@ public class DSC {
                     read_csv_line = read_csv_br.readLine();
                     if (read_csv_line == null)
                         break ;
-                    if (i <= diff - 30)
+                    if (diff - 30 <= i)
                     {
-                        //TODO : add list
                         write_list.add(read_csv_line);
                     }
                 }
@@ -57,7 +56,7 @@ public class DSC {
                     read_csv_line = read_csv_br.readLine();
                     if (read_csv_line == null)
                         break ;
-                    if (i <= diff + 30)
+                    if (diff <= i)
                     {
                         write_list.add(read_csv_line);
                     }
@@ -181,6 +180,7 @@ public class DSC {
                                 System.out.println("prev_str" + prev_str);
                                 System.out.println("future_str" + future_str);
                                 String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
+                                System.out.println("format : " + stock_code_format);
                                 //실제 파일이 존재하는 지 확인하는 코드
                                 Path prev_kospi_path = new Path(getDir(new String[]{prev_str, kosdaq, stock_code_format}) + ".csv");
                                 Path prev_kosdaq_path = new Path(getDir(new String[]{prev_str, kospi, stock_code_format}) + ".csv");
@@ -197,6 +197,10 @@ public class DSC {
                                 inputToList(future_kosdaq_path, diff, fs, write_list, false);
 
                                 //TODO : write output file
+                                if (write_list.size() <= 1)
+                                {
+                                    continue ;
+                                }
                                 Path output_file;
                                 for (int i = 0; ; i++)
                                 {
