@@ -40,11 +40,11 @@ public class DSC {
             String read_csv_line = read_csv_br.readLine();
             if (before)
             {
-                for (int i = 0; i < diff; i++) {
+                for (int i = 0; i <= diff; i++) {
                     read_csv_line = read_csv_br.readLine();
                     if (read_csv_line == null)
                         break ;
-                    if (diff - 30 <= i)
+                    if (diff - 30 < i)
                     {
                         write_list.add(read_csv_line);
                     }
@@ -52,11 +52,11 @@ public class DSC {
             }
             else
             {
-                for (int i = 0; i < diff + 30; i++) {
+                for (int i = 0; i <= diff + 30; i++) {
                     read_csv_line = read_csv_br.readLine();
                     if (read_csv_line == null)
                         break ;
-                    if (diff <= i)
+                    if (diff < i)
                     {
                         write_list.add(read_csv_line);
                     }
@@ -126,7 +126,6 @@ public class DSC {
                             {
                                 ArrayList<String> write_list = new ArrayList<>();
                                 write_list.add(hoze);
-                                //TODO : find file
                                 /**
                                  * 날짜, 시간, 파일 이름순
                                  */
@@ -163,13 +162,19 @@ public class DSC {
                                 {
                                     prev_now = prev_now.withHour(15).withMinute(20).withSecond(0).withNano(0);
                                     future_now = future_now.withHour(9).withMinute(0).withSecond(0).withNano(0);
-                                    while (isWeekday(prev_now))
+                                    if (hour < 9 || (hour == 9 && minute < 30))
                                     {
                                         prev_now = prev_now.minusDays(1);
+                                        while (isWeekday(prev_now))
+                                        {
+                                            prev_now = prev_now.minusDays(1);
+                                        }
                                     }
-                                    while (isWeekday(future_now))
-                                    {
+                                    else {
                                         future_now = future_now.plusDays(1);
+                                        while (isWeekday(future_now)) {
+                                            future_now = future_now.plusDays(1);
+                                        }
                                     }
                                 }
                                 String prev_str = getDir(new String[]{inputFolder, prev_now.format(folder_formatter)});
@@ -196,7 +201,6 @@ public class DSC {
                                 inputToList(future_kospi_path, diff, fs, write_list, false);
                                 inputToList(future_kosdaq_path, diff, fs, write_list, false);
 
-                                //TODO : write output file
                                 if (write_list.size() <= 1)
                                 {
                                     continue ;
