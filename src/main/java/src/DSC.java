@@ -4,6 +4,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.*;
 import java.time.DayOfWeek;
@@ -125,7 +129,7 @@ public class DSC {
                             else
                             {
                                 ArrayList<String> write_list = new ArrayList<>();
-                                write_list.add(hoze);
+//                                write_list.add(hoze);
                                 /**
                                  * 날짜, 시간, 파일 이름순
                                  */
@@ -154,7 +158,7 @@ public class DSC {
                                 while (isWeekday(future_now))
                                 {
                                     future_now = future_now.plusDays(1);
-                                    System.out.println(prev_now.format(folder_formatter));
+                                    System.out.println(future_now.format(folder_formatter));
                                 }
 
                                 //TODO : error in this code
@@ -185,6 +189,8 @@ public class DSC {
                                 System.out.println("prev_str" + prev_str);
                                 System.out.println("future_str" + future_str);
                                 String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
+
+                                write_list.add(hoze + ',' + stock_code_format);
                                 System.out.println("format : " + stock_code_format);
                                 //실제 파일이 존재하는 지 확인하는 코드
                                 Path prev_kospi_path = new Path(getDir(new String[]{prev_str, kosdaq, stock_code_format}) + ".csv");
@@ -192,16 +198,16 @@ public class DSC {
                                 Path future_kospi_path = new Path(getDir(new String[]{future_str, kosdaq, stock_code_format}) + ".csv");
                                 Path future_kosdaq_path = new Path(getDir(new String[]{future_str, kospi, stock_code_format}) + ".csv");
 
-                                long diff = (prev_now.getHour() - 9 )* 60 + prev_now.getMinute();
+                                long diff = (prev_now.getHour() - 9 ) * 60 + prev_now.getMinute();
                                 System.out.println("diff : " + diff);
                                 inputToList(prev_kospi_path, diff, fs, write_list, true);
                                 inputToList(prev_kosdaq_path, diff, fs, write_list, true);
-                                diff = (future_now.getHour() - 9 )* 60 + future_now.getMinute();
+                                diff = (future_now.getHour() - 9 ) * 60 + future_now.getMinute();
                                 System.out.println("diff : " + diff);
                                 inputToList(future_kospi_path, diff, fs, write_list, false);
                                 inputToList(future_kosdaq_path, diff, fs, write_list, false);
 
-                                if (write_list.size() <= 1)
+                                if (write_list.size() != 60)
                                 {
                                     continue ;
                                 }
@@ -244,15 +250,58 @@ public class DSC {
      * 전체 파일을 스캔하면서 context에 하나씩 작성.
      * key : company code
      * value : 0: 30분 이내의 데이터를 시간정보와 함께 직렬화, 구분은 :으로
-     *  1: 60분 이내의 데이터를 시간 정보와 함께 직렬화.
-     * 1.
+     *  1: 첫번째 줄 값 -> False, True , stockcode =>파싱 후 stock_code를 키값으로
+     *  2 : 두번째줄부터 읽은 다음, 계산 -> 앞의 줄 15줄과 중간 15줄 / 중간 15줄과 마지막 15줄을 가지고 분석
+     *  2-a : 분석시 두가지 분석 -> 거래량 변화의 평균값, 가격의 변동량
+     *  3 : 총 8가지 값이 나옴 -> key : stock code , value : 거래량 변화, 가격변동 * 4
+     *  4 : context에 작성
      */
         public static class MyMapper
                 extends Mapper<Object, Text, Text, Text> {
             private Text word = new Text();
 
+        /**
+         * 분봉 csv파일 형식
+         * prdy_vrss,prdy_vrss_sign,prdy_ctrt,stck_prdy_clpr,acml_vol,acml_tr_pbmn,hts_kor_isnm,stck_prpr,stck_bsop_date,stck_cntg_hour,stck_prpr,stck_oprc,stck_hgpr,stck_lwpr,cntg_vol,acml_tr_pbmn
+         * (날짜(20230412)8, (시간 : 090000)9, (현재가)10, (1분간 거래량)14
+         */
+        /**
+         * 실제 파일 형식 - 호재,stock_code
+         * @param key
+         * @param value
+         * @param context
+         * @throws IOException
+         * @throws InterruptedException
+         */
             public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+                String[] line = value.toString().split("\n");
+                String hoze = line[0].split(",")[0];
+                String stock_code = line[0].split(",")[1];
+                ArrayList<Integer> now_price = new ArrayList<>();
+                ArrayList<Integer> amount = new ArrayList<>();
+                for (String s : line) {
+                    String[] stock_minute_csv = s.split(",");
+                    if (hoze.equals(stock_minute_csv[0])) {
+                        continue;
+                    }
+                    now_price.add(Integer.parseInt(stock_minute_csv[10]));
+                    amount.add(Integer.parseInt(stock_minute_csv[14]));
 
+                }
+                String context_value = new String();
+                for (int i = 0; i < 60; i++)
+                {
+                    context_value += now_price.get(i) + "," + amount.get(i) + ",";
+                }
+                context.write(new Text(stock_code), new Text (context_value));
+//                for (int j = 0; j < 4; j++)
+//                {
+//                    Integer now_price_
+//                    for (int i = 0; i < 15; i++)
+//                    {
+//
+//                    }
+//                }
             }
         }
 
@@ -262,11 +311,20 @@ public class DSC {
      * 각각의 줄을 모으고, 60 ~ 30 / 30 ~ 0 ~ 30 / 30 ~ 60까지의 데이터로 전처리함.
      * 이 줄들을 분석한 다음, 변동률, 수익률을 가지고 나이브한 형식으로 value에 작성함.
      * output : key : dart에서 분석한 호재, 악재, value : 주식 가격의 변동률, 수익률, 얼마나 작용한지
+     * 1. value : now_price,amount, ... (60개)
+     * 1-a. key, values 중 각각의 값을 비교해 변동값을 계산함.
+     * 3. key : stock_code / value : 가격 변동률, 거래량 변동률 (30분간의 변동률(%)와 내부 30분간의 변동률(%)를 가지고 서로 비교해 백분율로 표시하게 됨.)
      */
         public static class MyReducer
                 extends Reducer<Text, Text, Text, Text> {
             protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+                Integer before_amount;
+                Integer after_amount;
+                Integer before_stock_price;
+                Integer after_stock_price;
+                for (Text value : values) {
 
+                }
             }
 
             /**
@@ -282,11 +340,32 @@ public class DSC {
 
         Configuration conf = new Configuration();
 
-//            Job job = Job.getInstance(conf, "preprocess");
+            Job job = Job.getInstance(conf, "preprocess");
 //
 //            job.setJarByClass(preprocess.class);
 
-        preprocess(inputFolder, dartFolder, outputFolder);
-    }
+            //preprocessing finished
+//        preprocess(inputFolder, dartFolder, outputFolder);
 
+//        java.lang.module.Configuration conf = new java.lang.module.Configuration();
+
+        job.setJarByClass(DSC.class);
+
+        job.setMapperClass(DSC.MyMapper.class);
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(Text.class);
+
+        job.setReducerClass(DSC.MyReducer.class);
+        job.setOutputKeyClass(IntWritable.class);
+        job.setOutputValueClass(Text.class);
+
+        job.setInputFormatClass(TextInputFormat.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+
+        FileInputFormat.addInputPath(job,new Path(inputFolder));
+        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
+
+        job.waitForCompletion(true);
+
+    }
 }
