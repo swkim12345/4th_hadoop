@@ -1,4 +1,4 @@
-package src;
+//package src;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -61,6 +61,8 @@ public class checkStockVol {
     public static void inputToList(Path path, FileSystem fs, ArrayList<String> write_list, LocalDateTime start, LocalDateTime end, String hoze)
             throws IOException
     {
+        if (!fs.exists(path))
+            return ;
         BufferedReader read_csv_br = new BufferedReader(new InputStreamReader(fs.open(path)));
         String read_csv_line = read_csv_br.readLine();
         while ((read_csv_line = read_csv_br.readLine()) != null) {
@@ -182,7 +184,10 @@ public class checkStockVol {
                                     end = now.plusMinutes(30);
                                     inputToList(now_path, fs, write_list, start, end, hoze);
                                 }
-
+                                if (write_list.size() != 61)
+                                {
+                                    continue;
+                                }
                                 String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
                                 Path output_file;
                                 for (int i = 0; ; i++)
