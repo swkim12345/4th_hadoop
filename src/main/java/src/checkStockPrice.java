@@ -176,10 +176,10 @@ public class checkStockPrice {
                                     end = now.plusMinutes(10);
                                     inputToList(now_path, fs, write_list, start, end, hoze);
                                 }
-//                                if (write_list.size() != 21)
-//                                {
-//                                    continue;
-//                                }
+                                if (write_list.size() != 21)
+                                {
+                                    continue;
+                                }
                                 String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
                                 Path output_file;
                                 for (int i = 0; ; i++)
