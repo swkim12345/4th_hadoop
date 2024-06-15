@@ -62,7 +62,9 @@ public class checkStockVol {
             throws IOException
     {
         if (path == null || !fs.exists(path))
-            return ;
+        {
+            System.out.println("skip");
+        }
         BufferedReader read_csv_br = new BufferedReader(new InputStreamReader(fs.open(path)));
         String read_csv_line = read_csv_br.readLine();
         while ((read_csv_line = read_csv_br.readLine()) != null) {
@@ -149,11 +151,9 @@ public class checkStockVol {
                                 LocalDateTime future_now = now.plusDays(1);
                                 while (isWeekday(prev_now)) {
                                     prev_now = prev_now.minusDays(1);
-                                    System.out.println(prev_now.format(folder_formatter));
                                 }
                                 while (isWeekday(future_now)) {
                                     future_now = future_now.plusDays(1);
-                                    System.out.println(future_now.format(folder_formatter));
                                 }
 
                                 Path prev_path = findRightPath(inputFolder, stock_code, fs, prev_now);
@@ -180,8 +180,6 @@ public class checkStockVol {
                                     end = LocalDateTime.of(year, month, day, 15, 20);
 
 //                                    //system println
-                                    System.out.println(start.format(formatter));
-                                    System.out.println(end.format(formatter));
                                     System.out.println(start);
                                     System.out.println(end);
 
@@ -189,8 +187,6 @@ public class checkStockVol {
                                     start = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 0);
                                     end = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 29);
 //                                    //system println
-                                    System.out.println(start.format(formatter));
-                                    System.out.println(end.format(formatter));
                                     System.out.println(start);
                                     System.out.println(end);
                                     inputToList(future_path, fs, write_list, start, end, hoze);
