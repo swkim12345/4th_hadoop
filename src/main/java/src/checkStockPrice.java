@@ -6,9 +6,15 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.*;
 import java.time.DayOfWeek;
@@ -288,56 +294,56 @@ public class checkStockPrice {
     public static class MyReducer
             extends Reducer<Text, Text, Text, Text> {
         protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-            Integer before_amount;
-            Integer after_amount;
-            Integer before_stock_price;
-            Integer after_stock_price;
+            ArrayList<Integer> before_stock_price = new ArrayList<>();
+            ArrayList<Integer> after_stock_price = new ArrayList<>();
             for (Text value : values) {
-
+                String[] line = value.toString().split(",");
+                for (int i = 0; i < line.length; i++) {
+                    if (i <= 10)
+                    {
+                        before_stock_price.add(Integer.parseInt(line[i]));
+                    }
+                    else
+                    {
+                        after_stock_price.add(Integer.parseInt(line[i]));
+                    }
+                }
             }
+            double before_stock_price_avg = before_stock_price.stream().mapToInt(i -> i).average().getAsDouble();
+            double after_stock_price_avg = after_stock_price.stream().mapToInt(i -> i).average().getAsDouble();
+            context.write(key, new Text(before_stock_price_avg + "," + after_stock_price_avg + "\n"));
         }
-
-        /**
-         * Afterprocessing
-         * 1. 구현하지 않는다.
-         */
     }
 
     public static void main(String[] args) throws Exception {
         String inputFolder = args[0];
-        String dartFolder = args[1];
-        String outputFolder = args[2];
+        String outputFolder = args[1];
+//        String dartFolder = args[1];
+//        String outputFolder = args[2];
 //        preprocess(inputFolder, dartFolder, outputFolder);
 
 
-//        Configuration conf = new Configuration();
+        Configuration conf = new Configuration();
 
-//        Job job = Job.getInstance(conf, "preprocess");
-//
-//            job.setJarByClass(preprocess.class);
+        Job job = Job.getInstance(conf, "checkStockPrice");
 
-        //preprocessing finished
-//        preprocess(inputFolder, dartFolder, outputFolder);
+        job.setJarByClass(checkStockPrice.class);
 
-//        java.lang.module.Configuration conf = new java.lang.module.Configuration();
+        job.setMapperClass(checkStockPrice.MyMapper.class);
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(Text.class);
 
-//        job.setJarByClass(DSC.class);
-//
-//        job.setMapperClass(DSC.MyMapper.class);
-//        job.setMapOutputKeyClass(IntWritable.class);
-//        job.setMapOutputValueClass(Text.class);
-//
-//        job.setReducerClass(DSC.MyReducer.class);
-//        job.setOutputKeyClass(IntWritable.class);
-//        job.setOutputValueClass(Text.class);
-//
-//        job.setInputFormatClass(TextInputFormat.class);
-//        job.setOutputFormatClass(TextOutputFormat.class);
-//
-//        FileInputFormat.addInputPath(job,new Path(inputFolder));
-//        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
-//
-//        job.waitForCompletion(true);
+        job.setReducerClass(checkStockPrice.MyReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+
+        job.setInputFormatClass(TextInputFormat.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+
+        FileInputFormat.addInputPath(job,new Path(inputFolder));
+        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
+
+        job.waitForCompletion(true);
 
     }
 }

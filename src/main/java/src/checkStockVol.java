@@ -348,7 +348,7 @@ public class checkStockVol {
             }
             double stock_amount_deviation = stdDeviation(after_stock_amount) / stdDeviation(before_stock_amount);
             double stock_price_deviation = stdDeviation(after_stock_price) / stdDeviation(before_stock_price);
-            context.write(key, new Text(stock_amount_deviation + "," + stock_price_deviation));
+            context.write(key, new Text(stock_amount_deviation + "," + stock_price_deviation + "\n"));
         }
 
         /**
