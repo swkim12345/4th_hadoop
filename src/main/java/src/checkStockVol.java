@@ -144,8 +144,8 @@ public class checkStockVol {
                                 Integer day = Integer.parseInt(rcept_dt.substring(6, 8));
                                 DateTimeFormatter folder_formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd");
                                 LocalDateTime now = LocalDateTime.of(year, month, day, hour, minute);
-                                LocalDateTime prev_now = now;
-                                LocalDateTime future_now = now;
+                                LocalDateTime prev_now = now.minusDays(1);
+                                LocalDateTime future_now = now.plusDays(1);
                                 while (isWeekday(prev_now)) {
                                     prev_now = now.minusDays(1);
                                     System.out.println(prev_now.format(folder_formatter));
@@ -178,16 +178,16 @@ public class checkStockVol {
                                     start = LocalDateTime.of(year, month, day, 14, 50);
                                     end = LocalDateTime.of(year, month, day, 15, 20);
 
-                                    //system println
-                                    System.out.println(start.format(formatter));
-                                    System.out.println(end.format(formatter));
+//                                    //system println
+//                                    System.out.println(start.format(formatter));
+//                                    System.out.println(end.format(formatter));
 
                                     inputToList(now_path, fs, write_list, start, end, hoze);
                                     start = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 0);
                                     end = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 29);
-                                    //system println
-                                    System.out.println(start.format(formatter));
-                                    System.out.println(end.format(formatter));
+//                                    //system println
+//                                    System.out.println(start.format(formatter));
+//                                    System.out.println(end.format(formatter));
                                     inputToList(future_path, fs, write_list, start, end, hoze);
                                 }
                                 else{
