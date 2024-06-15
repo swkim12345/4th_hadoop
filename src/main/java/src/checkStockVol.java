@@ -147,7 +147,7 @@ public class checkStockVol {
                                 LocalDateTime prev_now = now.minusDays(1);
                                 LocalDateTime future_now = now.plusDays(1);
                                 while (isWeekday(prev_now)) {
-                                    prev_now = now.minusDays(1);
+                                    prev_now = prev_now.minusDays(1);
                                     System.out.println(prev_now.format(folder_formatter));
                                 }
                                 while (isWeekday(future_now)) {

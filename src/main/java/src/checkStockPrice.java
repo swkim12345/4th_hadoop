@@ -138,15 +138,13 @@ public class checkStockPrice {
                                 Integer day = Integer.parseInt(rcept_dt.substring(6, 8));
                                 DateTimeFormatter folder_formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd");
                                 LocalDateTime now = LocalDateTime.of(year, month, day, hour, minute);
-                                LocalDateTime prev_now = now;
-                                LocalDateTime future_now = now;
+                                LocalDateTime prev_now = now.minusDays(1);
+                                LocalDateTime future_now = now.plusDays(1);
                                 while (isWeekday(prev_now)) {
-                                    prev_now = now.minusDays(1);
-                                    System.out.println(prev_now.format(folder_formatter));
+                                    prev_now = prev_now.minusDays(1);
                                 }
                                 while (isWeekday(future_now)) {
                                     future_now = future_now.plusDays(1);
-                                    System.out.println(future_now.format(folder_formatter));
                                 }
 
                                 Path prev_path = findRightPath(inputFolder, stock_code, fs, prev_now);
