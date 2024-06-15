@@ -6,9 +6,15 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.*;
 import java.time.DayOfWeek;
@@ -68,42 +74,6 @@ public class checkStockVol {
         }
     }
 
-
-    public static void inputToList(Path path, long diff, FileSystem fs, ArrayList<String> write_list, boolean before)
-            throws IOException
-    {
-        System.out.println("path : " + path.toString());
-        if (fs.exists(path)) {
-            BufferedReader read_csv_br = new BufferedReader(new InputStreamReader(fs.open(path)));
-            String read_csv_line = read_csv_br.readLine();
-            if (before)
-            {
-                for (int i = 0; i <= diff; i++) {
-                    read_csv_line = read_csv_br.readLine();
-                    if (read_csv_line == null)
-                        break ;
-                    if (diff - 30 < i)
-                    {
-                        write_list.add(read_csv_line);
-                    }
-                }
-            }
-            else
-            {
-                for (int i = 0; i <= diff + 30; i++) {
-                    read_csv_line = read_csv_br.readLine();
-                    if (read_csv_line == null)
-                        break ;
-                    if (diff < i)
-                    {
-                        write_list.add(read_csv_line);
-                    }
-                }
-            }
-        }
-    }
-
-
     /**
      * Preprocessing
      * 실제로 hadoop상에서 제공하는 맵리듀스 라이브러리를 사용하지 않고 처리를 진행함.
@@ -117,17 +87,12 @@ public class checkStockVol {
     public static void preprocess(String inputFolder, String dartFolder, String outputFolder)
             throws IOException {
 
-//        final Integer period = 10;
-
         Configuration conf = new Configuration();
         //hadoop filesystem에 접근하는 팩토리 메서드
         FileSystem fs = FileSystem.get(conf);
 
         Path daFolder = new Path(dartFolder);
 
-//        LocalDateTime startTime = LocalDateTime.of(2023, 1,1,9,0);
-
-//        FSDataOutputStream outputStream = fs.create(outFolder);
         if (fs.exists(daFolder)) {
             FileStatus[] fileStatus = fs.listStatus(daFolder);
             for (FileStatus status : fileStatus) {
@@ -162,7 +127,6 @@ public class checkStockVol {
                             }
                             else {
                                 ArrayList<String> write_list = new ArrayList<>();
-//                                write_list.add(hoze);
                                 /**
                                  * 날짜, 시간, 파일 이름순
                                  */
@@ -219,10 +183,6 @@ public class checkStockVol {
                                     inputToList(now_path, fs, write_list, start, end, hoze);
                                 }
 
-                                if (write_list.size() != 60)
-                                {
-                                    continue ;
-                                }
                                 String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
                                 Path output_file;
                                 for (int i = 0; ; i++)
@@ -344,5 +304,43 @@ public class checkStockVol {
          * Afterprocessing
          * 1. 구현하지 않는다.
          */
+    }
+
+    public static void main(String[] args) throws Exception {
+        String inputFolder = args[0];
+        String dartFolder = args[1];
+        String outputFolder = args[2];
+
+//        Configuration conf = new Configuration();
+
+        preprocess(inputFolder, dartFolder, outputFolder);
+
+//        Job job = Job.getInstance(conf, "preprocess");
+//
+//            job.setJarByClass(preprocess.class);
+
+        //preprocessing finished
+//        preprocess(inputFolder, dartFolder, outputFolder);
+
+//        java.lang.module.Configuration conf = new java.lang.module.Configuration();
+
+//        job.setJarByClass(DSC.class);
+//
+//        job.setMapperClass(DSC.MyMapper.class);
+//        job.setMapOutputKeyClass(IntWritable.class);
+//        job.setMapOutputValueClass(Text.class);
+//
+//        job.setReducerClass(DSC.MyReducer.class);
+//        job.setOutputKeyClass(IntWritable.class);
+//        job.setOutputValueClass(Text.class);
+//
+//        job.setInputFormatClass(TextInputFormat.class);
+//        job.setOutputFormatClass(TextOutputFormat.class);
+//
+//        FileInputFormat.addInputPath(job,new Path(inputFolder));
+//        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
+//
+//        job.waitForCompletion(true);
+
     }
 }
