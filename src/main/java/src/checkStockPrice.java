@@ -17,6 +17,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class checkStockPrice {
+    final private int period = 30;
+
     public static boolean isWeekday(LocalDateTime dateTime) {
         DayOfWeek dayOfWeek = dateTime.getDayOfWeek();
         return (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY);
@@ -33,41 +35,40 @@ public class checkStockPrice {
         return (ret);
     }
 
-
-    public static void inputToList(Path path, long diff, FileSystem fs, ArrayList<String> write_list, boolean before)
+    public static Path findRightPath(String inputFolder, String stock_code, FileSystem fs, LocalDateTime now)
             throws IOException
     {
-        System.out.println("path : " + path.toString());
-        if (fs.exists(path)) {
-            BufferedReader read_csv_br = new BufferedReader(new InputStreamReader(fs.open(path)));
-            String read_csv_line = read_csv_br.readLine();
-            if (before)
-            {
-                for (int i = 0; i <= diff; i++) {
-                    read_csv_line = read_csv_br.readLine();
-                    if (read_csv_line == null)
-                        break ;
-                    if (diff - 30 < i)
-                    {
-                        write_list.add(read_csv_line);
-                    }
-                }
-            }
-            else
-            {
-                for (int i = 0; i <= diff + 30; i++) {
-                    read_csv_line = read_csv_br.readLine();
-                    if (read_csv_line == null)
-                        break ;
-                    if (diff < i)
-                    {
-                        write_list.add(read_csv_line);
-                    }
-                }
+        String filename = String.format("%06d", Integer.parseInt(stock_code));
+        DateTimeFormatter folder_formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd");
+        String date_dir = getDir(new String[] {inputFolder, now.format(folder_formatter)});
+        Path kospi_path = new Path(getDir(new String[]{date_dir, "kospi", filename}) + ".csv");
+        Path kosdaq_path = new Path(getDir(new String[]{date_dir, "kosdaq", filename}) + ".csv");
+
+        if (fs.exists(kospi_path))
+            return (kospi_path);
+        else if (fs.exists(kosdaq_path))
+            return (kosdaq_path);
+        else
+            return (null);
+    }
+
+    public static void inputToList(Path path, FileSystem fs, ArrayList<String> write_list, LocalDateTime start, LocalDateTime end, String hoze)
+            throws IOException
+    {
+        if (path == null || !fs.exists(path))
+            return ;
+        BufferedReader read_csv_br = new BufferedReader(new InputStreamReader(fs.open(path)));
+        String read_csv_line = read_csv_br.readLine();
+        while ((read_csv_line = read_csv_br.readLine()) != null) {
+            String time = read_csv_line.split(",")[9];
+            Integer hour = Integer.parseInt(time.substring(0, 2));
+            Integer minute = Integer.parseInt(time.substring(2, 4));
+            LocalDateTime cmp = LocalDateTime.of(start.getYear(), start.getMonth(), start.getDayOfMonth(), hour, minute);
+            if (start.compareTo(cmp) >= 0&& end.compareTo(cmp) <= 0) {
+                write_list.add(read_csv_line + "," + hoze);
             }
         }
     }
-
 
     /**
      * Preprocessing
@@ -86,13 +87,8 @@ public class checkStockPrice {
         //hadoop filesystem에 접근하는 팩토리 메서드
         FileSystem fs = FileSystem.get(conf);
 
-        //폴더를 읽어 처리하는 파일
-        Path inFolder = new Path(inputFolder);
         Path daFolder = new Path(dartFolder);
 
-//        LocalDateTime startTime = LocalDateTime.of(2023, 1,1,9,0);
-
-//        FSDataOutputStream outputStream = fs.create(outFolder);
         if (fs.exists(daFolder)) {
             FileStatus[] fileStatus = fs.listStatus(daFolder);
             for (FileStatus status : fileStatus) {
@@ -125,10 +121,8 @@ public class checkStockPrice {
                             System.out.println("hoze : " + hoze);
                             if (stock_code.isEmpty() || rcept_dt.isEmpty() || time.isEmpty() || hoze.isEmpty()) {
                             }
-                            else
-                            {
+                            else {
                                 ArrayList<String> write_list = new ArrayList<>();
-//                                write_list.add(hoze);
                                 /**
                                  * 날짜, 시간, 파일 이름순
                                  */
@@ -137,7 +131,7 @@ public class checkStockPrice {
                                  * prdy_vrss,prdy_vrss_sign,prdy_ctrt,stck_prdy_clpr,acml_vol,acml_tr_pbmn,hts_kor_isnm,stck_prpr,stck_bsop_date,stck_cntg_hour,stck_prpr,stck_oprc,stck_hgpr,stck_lwpr,cntg_vol,acml_tr_pbmn
                                  * (날짜(20230412)8, (시간 : 090000)9, (현재가)10, (1분간 거래량)14
                                  */
-                                Integer hour = Integer.parseInt( time.split(":")[0]);
+                                Integer hour = Integer.parseInt(time.split(":")[0]);
                                 Integer minute = Integer.parseInt(time.split(":")[1]);
                                 Integer year = Integer.parseInt(rcept_dt.substring(0, 4));
                                 Integer month = Integer.parseInt(rcept_dt.substring(4, 6));
@@ -146,70 +140,49 @@ public class checkStockPrice {
                                 LocalDateTime now = LocalDateTime.of(year, month, day, hour, minute);
                                 LocalDateTime prev_now = now;
                                 LocalDateTime future_now = now;
-                                /**
-                                 * hour가 9시 이전 혹은 9시 반 이전일 경우 / 15시 이후 혹은 14시 50분 초과일 경우
-                                 */
-                                while (isWeekday(prev_now))
-                                {
+                                while (isWeekday(prev_now)) {
                                     prev_now = now.minusDays(1);
                                     System.out.println(prev_now.format(folder_formatter));
                                 }
-                                while (isWeekday(future_now))
-                                {
+                                while (isWeekday(future_now)) {
                                     future_now = future_now.plusDays(1);
                                     System.out.println(future_now.format(folder_formatter));
                                 }
 
-                                //TODO : error in this code
-                                if (hour < 9 || (hour == 9 && minute < 30) || hour >= 15 || (hour == 14 && minute < 50))
-                                {
-                                    prev_now = prev_now.withHour(15).withMinute(20).withSecond(0).withNano(0);
-                                    future_now = future_now.withHour(9).withMinute(0).withSecond(0).withNano(0);
-                                    if (hour < 9 || (hour == 9 && minute < 30))
-                                    {
-                                        prev_now = prev_now.minusDays(1);
-                                        while (isWeekday(prev_now))
-                                        {
-                                            prev_now = prev_now.minusDays(1);
-                                        }
-                                    }
-                                    else {
-                                        future_now = future_now.plusDays(1);
-                                        while (isWeekday(future_now)) {
-                                            future_now = future_now.plusDays(1);
-                                        }
-                                    }
-                                }
-                                String prev_str = getDir(new String[]{inputFolder, prev_now.format(folder_formatter)});
-                                String future_str = getDir(new String[]{inputFolder, future_now.format(folder_formatter)});
-                                String kospi = "kospi";
-                                String kosdaq = "kosdaq";
+                                Path prev_path = findRightPath(inputFolder, stock_code, fs, prev_now);
+                                Path now_path = findRightPath(dartFolder, stock_code, fs, now);
+                                Path future_path = findRightPath(inputFolder, stock_code, fs, future_now);
 
-                                System.out.println("prev_str" + prev_str);
-                                System.out.println("future_str" + future_str);
+                                LocalDateTime start;
+                                LocalDateTime end;
+
+                                //TODO: refactoring more efficiently
+                                if (hour < 9 || (hour == 9 && minute < 10)) { //전날
+                                    start = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 15, 11);
+                                    end = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 15, 20);
+                                    inputToList(prev_path, fs, write_list, start, end, hoze);
+                                    start = LocalDateTime.of(year, month, day, 9, 0);
+                                    end = LocalDateTime.of(year, month, day, 9, 10);
+                                    inputToList(now_path, fs, write_list, start, end, hoze);
+                                } else if (hour > 15 || (hour == 15 && minute >= 10))
+                                {
+                                    start = LocalDateTime.of(year, month, day, 15, 10);
+                                    end = LocalDateTime.of(year, month, day, 15, 20);
+                                    inputToList(now_path, fs, write_list, start, end, hoze);
+                                    start = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 0);
+                                    end = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 9);
+                                    inputToList(future_path, fs, write_list, start, end, hoze);
+                                }
+                                else{
+                                    start = now.minusMinutes(10);
+                                    end = now.plusMinutes(10);
+                                    inputToList(now_path, fs, write_list, start, end, hoze);
+                                }
+                                if (write_list.size() != 21)
+                                {
+                                    continue;
+                                }
                                 String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
-
-                                write_list.add(hoze + ',' + stock_code_format);
-                                System.out.println("format : " + stock_code_format);
-                                //실제 파일이 존재하는 지 확인하는 코드
-                                Path prev_kospi_path = new Path(getDir(new String[]{prev_str, kosdaq, stock_code_format}) + ".csv");
-                                Path prev_kosdaq_path = new Path(getDir(new String[]{prev_str, kospi, stock_code_format}) + ".csv");
-                                Path future_kospi_path = new Path(getDir(new String[]{future_str, kosdaq, stock_code_format}) + ".csv");
-                                Path future_kosdaq_path = new Path(getDir(new String[]{future_str, kospi, stock_code_format}) + ".csv");
-
-                                long diff = (prev_now.getHour() - 9 ) * 60 + prev_now.getMinute();
-                                System.out.println("diff : " + diff);
-                                inputToList(prev_kospi_path, diff, fs, write_list, true);
-                                inputToList(prev_kosdaq_path, diff, fs, write_list, true);
-                                diff = (future_now.getHour() - 9 ) * 60 + future_now.getMinute();
-                                System.out.println("diff : " + diff);
-                                inputToList(future_kospi_path, diff, fs, write_list, false);
-                                inputToList(future_kosdaq_path, diff, fs, write_list, false);
-
-                                if (write_list.size() != 60)
-                                {
-                                    continue ;
-                                }
                                 Path output_file;
                                 for (int i = 0; ; i++)
                                 {
@@ -330,5 +303,43 @@ public class checkStockPrice {
          * Afterprocessing
          * 1. 구현하지 않는다.
          */
+    }
+
+    public static void main(String[] args) throws Exception {
+        String inputFolder = args[0];
+        String dartFolder = args[1];
+        String outputFolder = args[2];
+
+//        Configuration conf = new Configuration();
+
+        preprocess(inputFolder, dartFolder, outputFolder);
+
+//        Job job = Job.getInstance(conf, "preprocess");
+//
+//            job.setJarByClass(preprocess.class);
+
+        //preprocessing finished
+//        preprocess(inputFolder, dartFolder, outputFolder);
+
+//        java.lang.module.Configuration conf = new java.lang.module.Configuration();
+
+//        job.setJarByClass(DSC.class);
+//
+//        job.setMapperClass(DSC.MyMapper.class);
+//        job.setMapOutputKeyClass(IntWritable.class);
+//        job.setMapOutputValueClass(Text.class);
+//
+//        job.setReducerClass(DSC.MyReducer.class);
+//        job.setOutputKeyClass(IntWritable.class);
+//        job.setOutputValueClass(Text.class);
+//
+//        job.setInputFormatClass(TextInputFormat.class);
+//        job.setOutputFormatClass(TextOutputFormat.class);
+//
+//        FileInputFormat.addInputPath(job,new Path(inputFolder));
+//        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
+//
+//        job.waitForCompletion(true);
+
     }
 }

@@ -61,7 +61,7 @@ public class checkStockVol {
     public static void inputToList(Path path, FileSystem fs, ArrayList<String> write_list, LocalDateTime start, LocalDateTime end, String hoze)
             throws IOException
     {
-        if (!fs.exists(path))
+        if (path == null || !fs.exists(path))
             return ;
         BufferedReader read_csv_br = new BufferedReader(new InputStreamReader(fs.open(path)));
         String read_csv_line = read_csv_br.readLine();
@@ -164,19 +164,19 @@ public class checkStockVol {
 
                                 //TODO: refactoring more efficiently
                                 if (hour < 9 || (hour == 9 && minute < 30)) { //전날
-                                    start = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 14, 50);
+                                    start = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 14, 51);
                                     end = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 15, 20);
                                     inputToList(prev_path, fs, write_list, start, end, hoze);
                                     start = LocalDateTime.of(year, month, day, 9, 0);
-                                    end = LocalDateTime.of(year, month, day, 9, 31);
+                                    end = LocalDateTime.of(year, month, day, 9, 30);
                                     inputToList(now_path, fs, write_list, start, end, hoze);
                                 } else if (hour >= 15 || (hour == 14 && minute > 50))
                                 {
-                                    start = LocalDateTime.of(year, month, day, 14, 49);
+                                    start = LocalDateTime.of(year, month, day, 14, 50);
                                     end = LocalDateTime.of(year, month, day, 15, 20);
                                     inputToList(now_path, fs, write_list, start, end, hoze);
                                     start = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 0);
-                                    end = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 30);
+                                    end = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 29);
                                     inputToList(future_path, fs, write_list, start, end, hoze);
                                 }
                                 else{
