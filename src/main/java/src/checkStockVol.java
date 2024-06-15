@@ -52,13 +52,19 @@ public class checkStockVol {
             return (null);
     }
 
-    public static void inputToLit(Path path, FileSystem fs, ArrayList<String> write_list, LocalDateTime start, LocalDateTime end, boolean dart_hoze)
+    public static void inputToList(Path path, FileSystem fs, ArrayList<String> write_list, LocalDateTime start, LocalDateTime end, String hoze)
             throws IOException
     {
         BufferedReader read_csv_br = new BufferedReader(new InputStreamReader(fs.open(path)));
         String read_csv_line = read_csv_br.readLine();
         while ((read_csv_line = read_csv_br.readLine()) != null) {
-
+            String time = read_csv_line.split(",")[9];
+            Integer hour = Integer.parseInt(time.substring(0, 2));
+            Integer minute = Integer.parseInt(time.substring(2, 4));
+            LocalDateTime cmp = LocalDateTime.of(start.getYear(), start.getMonth(), start.getDayOfMonth(), hour, minute);
+            if (start.compareTo(cmp) >= 0&& end.compareTo(cmp) <= 0) {
+                write_list.add(read_csv_line + "," + hoze);
+            }
         }
     }
 
@@ -187,29 +193,37 @@ public class checkStockVol {
                                 Path now_path = findRightPath(dartFolder, stock_code, fs, now);
                                 Path future_path = findRightPath(inputFolder, stock_code, fs, future_now);
 
-                                //TODO: check start and end position
+                                LocalDateTime start;
+                                LocalDateTime end;
+
+                                //TODO: refactoring more efficiently
                                 if (hour < 9 || (hour == 9 && minute < 30)) { //전날
-
-                                } else if (hour >= 15 && (hour == 14 && minute < 50))
+                                    start = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 14, 50);
+                                    end = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 15, 20);
+                                    inputToList(prev_path, fs, write_list, start, end, hoze);
+                                    start = LocalDateTime.of(year, month, day, 9, 0);
+                                    end = LocalDateTime.of(year, month, day, 9, 31);
+                                    inputToList(now_path, fs, write_list, start, end, hoze);
+                                } else if (hour >= 15 || (hour == 14 && minute > 50))
                                 {
-
+                                    start = LocalDateTime.of(year, month, day, 14, 49);
+                                    end = LocalDateTime.of(year, month, day, 15, 20);
+                                    inputToList(now_path, fs, write_list, start, end, hoze);
+                                    start = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 0);
+                                    end = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 30);
+                                    inputToList(future_path, fs, write_list, start, end, hoze);
                                 }
                                 else{
-
+                                    start = now.minusMinutes(30);
+                                    end = now.plusMinutes(30);
+                                    inputToList(now_path, fs, write_list, start, end, hoze);
                                 }
-                                long diff = (prev_now.getHour() - 9 ) * 60 + prev_now.getMinute();
-                                System.out.println("diff : " + diff);
-                                inputToList(prev_kospi_path, diff, fs, write_list, true);
-                                inputToList(prev_kosdaq_path, diff, fs, write_list, true);
-                                diff = (future_now.getHour() - 9 ) * 60 + future_now.getMinute();
-                                System.out.println("diff : " + diff);
-                                inputToList(future_kospi_path, diff, fs, write_list, false);
-                                inputToList(future_kosdaq_path, diff, fs, write_list, false);
 
                                 if (write_list.size() != 60)
                                 {
                                     continue ;
                                 }
+                                String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
                                 Path output_file;
                                 for (int i = 0; ; i++)
                                 {
