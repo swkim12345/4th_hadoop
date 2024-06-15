@@ -265,18 +265,14 @@ public class checkStockVol {
          */
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String[] line = value.toString().split("\n");
-            String hoze = line[0].split(",")[-1];
-            String stock_code = line[0].split(",")[1];
+            String[] splited_line = line[0].split(",");
+            String stock_code = splited_line[1];
             ArrayList<Integer> now_price = new ArrayList<>();
             ArrayList<Integer> amount = new ArrayList<>();
             for (String s : line) {
                 String[] stock_minute_csv = s.split(",");
-                if (hoze.equals(stock_minute_csv[0])) {
-                    continue;
-                }
                 now_price.add(Integer.parseInt(stock_minute_csv[10]));
                 amount.add(Integer.parseInt(stock_minute_csv[14]));
-
             }
             String context_value = new String();
             for (int i = 0; i < 60; i++)
@@ -305,16 +301,54 @@ public class checkStockVol {
      * 1-a. key, values 중 각각의 값을 비교해 변동값을 계산함.
      * 3. key : stock_code / value : 가격 변동률, 거래량 변동률 (30분간의 변동률(%)와 내부 30분간의 변동률(%)를 가지고 서로 비교해 백분율로 표시하게 됨.)
      */
+    /**
+     * 표준편차의 차이를 %로 구하자.
+     */
+
+    private static double stdDeviation(ArrayList<Integer> input)
+    {
+        Integer sumInput = input.stream().mapToInt(i -> i).sum();
+        double variance = 0;
+        for (Integer i : input)
+        {
+            variance += Math.pow(i - sumInput, 2);
+        }
+        variance = variance / input.size();
+        return Math.sqrt(variance);
+    }
+
     public static class MyReducer
             extends Reducer<Text, Text, Text, Text> {
         protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-            Integer before_amount;
-            Integer after_amount;
-            Integer before_stock_price;
-            Integer after_stock_price;
-            for (Text value : values) {
+            ArrayList<Integer> before_stock_price = new ArrayList<>();
+            ArrayList<Integer> after_stock_price = new ArrayList<>();
+            ArrayList<Integer> before_stock_amount = new ArrayList<>();
+            ArrayList<Integer> after_stock_amount = new ArrayList<>();
 
+            for (Text value : values) {
+                //홀수에 가격, 짝수에 변동량
+                String[] line = value.toString().split(",");
+                for (int i = 0; i < line.length; i++)
+                {
+                    if (i % 2 == 0)
+                    {
+                        if (i / 2 >= 15 && i / 2 < 45)
+                            before_stock_price.add(Integer.parseInt(line[i]));
+                        else
+                            after_stock_price.add(Integer.parseInt(line[i]));
+                    }
+                    else
+                    {
+                        if (i / 2 >= 15 && i / 2 < 45)
+                            before_stock_amount.add(Integer.parseInt(line[i]));
+                        else
+                            after_stock_amount.add(Integer.parseInt(line[i]));
+                    }
+                }
             }
+            double stock_amount_deviation = stdDeviation(after_stock_amount) / stdDeviation(before_stock_amount);
+            double stock_price_deviation = stdDeviation(after_stock_price) / stdDeviation(before_stock_price);
+            context.write(key, new Text(stock_amount_deviation + "," + stock_price_deviation));
         }
 
         /**
@@ -324,40 +358,37 @@ public class checkStockVol {
     }
 
     public static void main(String[] args) throws Exception {
+//        String inputFolder = args[0];
+//        String dartFolder = args[1];
+//        String outputFolder = args[2];
+
         String inputFolder = args[0];
-        String dartFolder = args[1];
-        String outputFolder = args[2];
-
-//        Configuration conf = new Configuration();
-
-        preprocess(inputFolder, dartFolder, outputFolder);
-
-//        Job job = Job.getInstance(conf, "preprocess");
-//
-//            job.setJarByClass(preprocess.class);
-
-        //preprocessing finished
+        String outputFolder = args[1];
 //        preprocess(inputFolder, dartFolder, outputFolder);
 
-//        java.lang.module.Configuration conf = new java.lang.module.Configuration();
+        Configuration conf = new Configuration();
 
-//        job.setJarByClass(DSC.class);
-//
-//        job.setMapperClass(DSC.MyMapper.class);
-//        job.setMapOutputKeyClass(IntWritable.class);
-//        job.setMapOutputValueClass(Text.class);
-//
-//        job.setReducerClass(DSC.MyReducer.class);
-//        job.setOutputKeyClass(IntWritable.class);
-//        job.setOutputValueClass(Text.class);
-//
-//        job.setInputFormatClass(TextInputFormat.class);
-//        job.setOutputFormatClass(TextOutputFormat.class);
-//
-//        FileInputFormat.addInputPath(job,new Path(inputFolder));
-//        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
-//
-//        job.waitForCompletion(true);
 
+
+        Job job = Job.getInstance(conf, "preprocess");
+
+
+        job.setJarByClass(checkStockVol.class);
+
+        job.setMapperClass(checkStockVol.MyMapper.class);
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(Text.class);
+
+        job.setReducerClass(checkStockVol.MyReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+
+        job.setInputFormatClass(TextInputFormat.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+
+        FileInputFormat.addInputPath(job,new Path(inputFolder));
+        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
+
+        job.waitForCompletion(true);
     }
 }

@@ -307,10 +307,10 @@ public class checkStockPrice {
         String inputFolder = args[0];
         String dartFolder = args[1];
         String outputFolder = args[2];
+//        preprocess(inputFolder, dartFolder, outputFolder);
+
 
 //        Configuration conf = new Configuration();
-
-        preprocess(inputFolder, dartFolder, outputFolder);
 
 //        Job job = Job.getInstance(conf, "preprocess");
 //
