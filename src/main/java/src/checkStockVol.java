@@ -64,6 +64,7 @@ public class checkStockVol {
         if (path == null || !fs.exists(path))
         {
             System.out.println("skip");
+            return ;
         }
         BufferedReader read_csv_br = new BufferedReader(new InputStreamReader(fs.open(path)));
         String read_csv_line = read_csv_br.readLine();
@@ -163,7 +164,6 @@ public class checkStockVol {
                                 LocalDateTime start;
                                 LocalDateTime end;
 
-                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_hh_mm_ss");
                                 //TODO: refactoring more efficiently
                                 if (hour < 9 || (hour == 9 && minute < 30)) { //전날
                                     start = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 14, 51);
