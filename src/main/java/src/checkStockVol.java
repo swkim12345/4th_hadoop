@@ -69,7 +69,8 @@ public class checkStockVol {
             String time = read_csv_line.split(",")[9];
             Integer hour = Integer.parseInt(time.substring(0, 2));
             Integer minute = Integer.parseInt(time.substring(2, 4));
-            LocalDateTime cmp = LocalDateTime.of(start.getYear(), start.getMonth(), start.getDayOfMonth(), hour, minute);
+            LocalDateTime cmp = LocalDateTime.of(start.getYear() , start.getMonth(), start.getDayOfMonth(), hour, minute);
+            System.out.println("cmp + " + cmp);
             if (start.compareTo(cmp) <= 0 && end.compareTo(cmp) >= 0) {
                 write_list.add(read_csv_line + "," + hoze);
             }
@@ -181,6 +182,8 @@ public class checkStockVol {
 //                                    //system println
                                     System.out.println(start.format(formatter));
                                     System.out.println(end.format(formatter));
+                                    System.out.println(start);
+                                    System.out.println(end);
 
                                     inputToList(now_path, fs, write_list, start, end, hoze);
                                     start = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 0);
@@ -188,6 +191,8 @@ public class checkStockVol {
 //                                    //system println
                                     System.out.println(start.format(formatter));
                                     System.out.println(end.format(formatter));
+                                    System.out.println(start);
+                                    System.out.println(end);
                                     inputToList(future_path, fs, write_list, start, end, hoze);
                                 }
                                 else{
