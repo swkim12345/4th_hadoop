@@ -162,10 +162,13 @@ public class checkStockVol {
                                 LocalDateTime start;
                                 LocalDateTime end;
 
+                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd_hh_mm_ss");
                                 //TODO: refactoring more efficiently
                                 if (hour < 9 || (hour == 9 && minute < 30)) { //전날
                                     start = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 14, 51);
                                     end = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 15, 20);
+
+
                                     inputToList(prev_path, fs, write_list, start, end, hoze);
                                     start = LocalDateTime.of(year, month, day, 9, 0);
                                     end = LocalDateTime.of(year, month, day, 9, 30);
@@ -174,9 +177,17 @@ public class checkStockVol {
                                 {
                                     start = LocalDateTime.of(year, month, day, 14, 50);
                                     end = LocalDateTime.of(year, month, day, 15, 20);
+
+                                    //system println
+                                    System.out.println(start.format(formatter));
+                                    System.out.println(end.format(formatter));
+
                                     inputToList(now_path, fs, write_list, start, end, hoze);
                                     start = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 0);
                                     end = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 29);
+                                    //system println
+                                    System.out.println(start.format(formatter));
+                                    System.out.println(end.format(formatter));
                                     inputToList(future_path, fs, write_list, start, end, hoze);
                                 }
                                 else{
