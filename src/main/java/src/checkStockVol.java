@@ -179,15 +179,15 @@ public class checkStockVol {
                                     end = LocalDateTime.of(year, month, day, 15, 20);
 
 //                                    //system println
-//                                    System.out.println(start.format(formatter));
-//                                    System.out.println(end.format(formatter));
+                                    System.out.println(start.format(formatter));
+                                    System.out.println(end.format(formatter));
 
                                     inputToList(now_path, fs, write_list, start, end, hoze);
                                     start = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 0);
                                     end = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 29);
 //                                    //system println
-//                                    System.out.println(start.format(formatter));
-//                                    System.out.println(end.format(formatter));
+                                    System.out.println(start.format(formatter));
+                                    System.out.println(end.format(formatter));
                                     inputToList(future_path, fs, write_list, start, end, hoze);
                                 }
                                 else{
