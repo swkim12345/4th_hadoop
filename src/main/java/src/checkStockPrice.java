@@ -64,7 +64,7 @@ public class checkStockPrice {
             Integer hour = Integer.parseInt(time.substring(0, 2));
             Integer minute = Integer.parseInt(time.substring(2, 4));
             LocalDateTime cmp = LocalDateTime.of(start.getYear(), start.getMonth(), start.getDayOfMonth(), hour, minute);
-            if (start.compareTo(cmp) >= 0&& end.compareTo(cmp) <= 0) {
+            if (start.compareTo(cmp) <= 0&& end.compareTo(cmp) >= 0) {
                 write_list.add(read_csv_line + "," + hoze);
             }
         }
