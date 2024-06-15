@@ -148,7 +148,7 @@ public class checkStockPrice {
                                 }
 
                                 Path prev_path = findRightPath(inputFolder, stock_code, fs, prev_now);
-                                Path now_path = findRightPath(dartFolder, stock_code, fs, now);
+                                Path now_path = findRightPath(inputFolder, stock_code, fs, now);
                                 Path future_path = findRightPath(inputFolder, stock_code, fs, future_now);
 
                                 LocalDateTime start;

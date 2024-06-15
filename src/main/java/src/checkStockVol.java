@@ -73,7 +73,7 @@ public class checkStockVol {
             Integer hour = Integer.parseInt(time.substring(0, 2));
             Integer minute = Integer.parseInt(time.substring(2, 4));
             LocalDateTime cmp = LocalDateTime.of(start.getYear() , start.getMonth(), start.getDayOfMonth(), hour, minute);
-            System.out.println("cmp + " + cmp);
+//            System.out.println("cmp + " + cmp);
             if (start.compareTo(cmp) <= 0 && end.compareTo(cmp) >= 0) {
                 write_list.add(read_csv_line + "," + hoze);
             }
@@ -158,7 +158,7 @@ public class checkStockVol {
                                 }
 
                                 Path prev_path = findRightPath(inputFolder, stock_code, fs, prev_now);
-                                Path now_path = findRightPath(dartFolder, stock_code, fs, now);
+                                Path now_path = findRightPath(inputFolder, stock_code, fs, now);
                                 Path future_path = findRightPath(inputFolder, stock_code, fs, future_now);
 
                                 LocalDateTime start;
@@ -196,10 +196,10 @@ public class checkStockVol {
                                     end = now.plusMinutes(30);
                                     inputToList(now_path, fs, write_list, start, end, hoze);
                                 }
-//                                if (write_list.size() != 61)
-//                                {
-//                                    continue;
-//                                }
+                                if (write_list.size() != 61)
+                                {
+                                    continue;
+                                }
                                 String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
                                 Path output_file;
                                 for (int i = 0; ; i++)
