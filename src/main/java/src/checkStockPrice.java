@@ -22,6 +22,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class checkStockPrice {
     final private int period = 30;
@@ -282,11 +283,14 @@ public class checkStockPrice {
         protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             ArrayList<Integer> before_stock_price = new ArrayList<>();
             ArrayList<Integer> after_stock_price = new ArrayList<>();
+            Iterator<Text> value_iter =  values.iterator();
 //            for (Text value : values) {
             for (int i = 0; i <= 20; i++)
             {
-                Text value = values.iterator().next();
+                Text value = value_iter.next();
+                System.out.println("value : " + value);
                 String[] line = value.toString().split(",");
+                System.out.println("date : " + line[0] + " " + line[1]);
                 if (i <= 10)
                 {
                     before_stock_price.add(Integer.parseInt(line[2]));
@@ -296,7 +300,6 @@ public class checkStockPrice {
                     after_stock_price.add(Integer.parseInt(line[2]));
                 }
             }
-            System.out.println("after_stock price : " + after_stock_price);
             double before_stock_price_avg = before_stock_price.stream().mapToInt(i -> i).average().getAsDouble();
             double after_stock_price_avg = after_stock_price.stream().mapToInt(i -> i).average().getAsDouble();
             context.write(key, new Text(before_stock_price_avg + "," + after_stock_price_avg + "\n"));
