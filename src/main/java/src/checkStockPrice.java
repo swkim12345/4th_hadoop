@@ -257,7 +257,7 @@ public class checkStockPrice {
             String stock_code = line[0].split(",")[1];
             ArrayList<Integer> now_price = new ArrayList<>();
             ArrayList<Integer> amount = new ArrayList<>();
-            static Logger log = Logger.getLogger(checkStockPrice.class.getName());
+            Logger log = Logger.getLogger(checkStockPrice.class.getName());
 
             for (String s : line) {
                 String[] stock_minute_csv = s.split(",");
