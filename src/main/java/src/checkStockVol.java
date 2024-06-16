@@ -315,14 +315,13 @@ public class checkStockVol {
             Iterator<Text> iterator = values.iterator();
             for (int i = 0; i <= 60; i++)
             {
-                Text value = iterator.next();
                 if (!iterator.hasNext())
                 {
                     break ;
                 }
-                System.out.println("Text : " + value);
+                Text value = iterator.next();
                 String[] line = value.toString().split(",");
-                if (i < 15 && i > 45)
+                if (i < 15 || i > 45)
                 {
                     after_stock_price.add(Integer.parseInt(line[2]));
                     after_stock_amount.add(Integer.parseInt(line[3]));
