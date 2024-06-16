@@ -315,20 +315,27 @@ public class checkStockVol {
             Iterator<Text> iterator = values.iterator();
             for (int i = 0; i <= 60; i++)
             {
-                Text value = iterator.next();
-                String[] line = value.toString().split(",");
-                if (i < 15 && i >= 45)
+                if (!iterator.hasNext())
                 {
-
+                    break ;
+                }
+                Text value = iterator.next();
+                System.out.println("Text : " + value);
+                String[] line = value.toString().split(",");
+                if (i < 15 || i > 45)
+                {
+                    after_stock_price.add(Integer.parseInt(line[2]));
+                    after_stock_amount.add(Integer.parseInt(line[3]));
                 }
                 else
                 {
-
+                    before_stock_price.add(Integer.parseInt(line[2]));
+                    before_stock_amount.add(Integer.parseInt(line[3]));
                 }
             }
-            double stock_amount_deviation = stdDeviation(after_stock_amount) / stdDeviation(before_stock_amount);
-            double stock_price_deviation = stdDeviation(after_stock_price) / stdDeviation(before_stock_price);
-            context.write(key, new Text(stock_amount_deviation + "," + stock_price_deviation));
+//            double stock_amount_deviation = stdDeviation(after_stock_amount) / stdDeviation(before_stock_amount);
+//            double stock_price_deviation = stdDeviation(after_stock_price) / stdDeviation(before_stock_price);
+            context.write(key, new Text(stdDeviation(before_stock_amount) + "," + stdDeviation(after_stock_amount) + "," + stdDeviation(before_stock_price) + "," +  stdDeviation(after_stock_price)));
         }
 
         /**
@@ -338,36 +345,34 @@ public class checkStockVol {
     }
 
     public static void main(String[] args) throws Exception {
-        String inputFolder = args[0];
-        String dartFolder = args[1];
-        String outputFolder = args[2];
-
 //        String inputFolder = args[0];
-//        String outputFolder = args[1];
-        preprocess(inputFolder, dartFolder, outputFolder);
+//        String dartFolder = args[1];
+//        String outputFolder = args[2];
 
-//        Configuration conf = new Configuration();
-//
-//
-//        Job job = Job.getInstance(conf, "checkStockVol");
-//
-//
-//        job.setJarByClass(checkStockVol.class);
-//
-//        job.setMapperClass(checkStockVol.MyMapper.class);
-//        job.setMapOutputKeyClass(Text.class);
-//        job.setMapOutputValueClass(Text.class);
-//
-//        job.setReducerClass(checkStockVol.MyReducer.class);
-//        job.setOutputKeyClass(Text.class);
-//        job.setOutputValueClass(Text.class);
-//
-//        job.setInputFormatClass(TextInputFormat.class);
-//        job.setOutputFormatClass(TextOutputFormat.class);
-//
-//        FileInputFormat.addInputPath(job,new Path(inputFolder));
-//        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
-//
-//        job.waitForCompletion(true);
+        String inputFolder = args[0];
+        String outputFolder = args[1];
+//        preprocess(inputFolder, dartFolder, outputFolder);
+
+        Configuration conf = new Configuration();
+
+        Job job = Job.getInstance(conf, "checkStockVol");
+
+        job.setJarByClass(checkStockVol.class);
+
+        job.setMapperClass(checkStockVol.MyMapper.class);
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(Text.class);
+
+        job.setReducerClass(checkStockVol.MyReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+
+        job.setInputFormatClass(TextInputFormat.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+
+        FileInputFormat.addInputPath(job,new Path(inputFolder));
+        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
+
+        job.waitForCompletion(true);
     }
 }

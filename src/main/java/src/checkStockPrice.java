@@ -296,7 +296,7 @@ public class checkStockPrice {
                 if (i == 0)
                     hoze += line[3];
 //                System.out.println("date : " + line[0] + " " + line[1]);
-                if (i <= 10)
+                if (i >= 10)
                 {
                     before_stock_price.add(Integer.parseInt(line[2]));
                 }
