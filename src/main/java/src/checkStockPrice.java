@@ -60,7 +60,7 @@ public class checkStockPrice {
             return (null);
     }
 
-    public static void inputToList(Path path, FileSystem fs, ArrayList<String> write_list, LocalDateTime start, LocalDateTime end, String hoze)
+    public static void inputToList(Path path, FileSystem fs, ArrayList<String> write_list, LocalDateTime start, LocalDateTime end, String hoze, String stock_code)
             throws IOException
     {
         if (path == null || !fs.exists(path))
@@ -73,7 +73,7 @@ public class checkStockPrice {
             Integer minute = Integer.parseInt(time.substring(2, 4));
             LocalDateTime cmp = LocalDateTime.of(start.getYear(), start.getMonth(), start.getDayOfMonth(), hour, minute);
             if (start.compareTo(cmp) <= 0&& end.compareTo(cmp) >= 0) {
-                write_list.add(read_csv_line + "," + hoze);
+                write_list.add(read_csv_line + "," + hoze + "," + stock_code);
             }
         }
     }
@@ -139,6 +139,8 @@ public class checkStockPrice {
                                  * prdy_vrss,prdy_vrss_sign,prdy_ctrt,stck_prdy_clpr,acml_vol,acml_tr_pbmn,hts_kor_isnm,stck_prpr,stck_bsop_date,stck_cntg_hour,stck_prpr,stck_oprc,stck_hgpr,stck_lwpr,cntg_vol,acml_tr_pbmn
                                  * (날짜(20230412)8, (시간 : 090000)9, (현재가)10, (1분간 거래량)14
                                  */
+                                String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
+
                                 Integer hour = Integer.parseInt(time.split(":")[0]);
                                 Integer minute = Integer.parseInt(time.split(":")[1]);
                                 Integer year = Integer.parseInt(rcept_dt.substring(0, 4));
@@ -166,29 +168,28 @@ public class checkStockPrice {
                                 if (hour < 9 || (hour == 9 && minute < 10)) { //전날
                                     start = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 15, 11);
                                     end = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 15, 20);
-                                    inputToList(prev_path, fs, write_list, start, end, hoze);
+                                    inputToList(prev_path, fs, write_list, start, end, hoze, stock_code_format);
                                     start = LocalDateTime.of(year, month, day, 9, 0);
                                     end = LocalDateTime.of(year, month, day, 9, 10);
-                                    inputToList(now_path, fs, write_list, start, end, hoze);
+                                    inputToList(now_path, fs, write_list, start, end, hoze, stock_code_format);
                                 } else if (hour > 15 || (hour == 15 && minute >= 10))
                                 {
                                     start = LocalDateTime.of(year, month, day, 15, 10);
                                     end = LocalDateTime.of(year, month, day, 15, 20);
-                                    inputToList(now_path, fs, write_list, start, end, hoze);
+                                    inputToList(now_path, fs, write_list, start, end, hoze , stock_code_format);
                                     start = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 0);
                                     end = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 9);
-                                    inputToList(future_path, fs, write_list, start, end, hoze);
+                                    inputToList(future_path, fs, write_list, start, end, hoze, stock_code_format);
                                 }
                                 else{
                                     start = now.minusMinutes(10);
                                     end = now.plusMinutes(10);
-                                    inputToList(now_path, fs, write_list, start, end, hoze);
+                                    inputToList(now_path, fs, write_list, start, end, hoze, stock_code_format);
                                 }
                                 if (write_list.size() != 21)
                                 {
                                     continue;
                                 }
-                                String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
                                 Path output_file;
                                 for (int i = 0; ; i++)
                                 {
@@ -255,7 +256,7 @@ public class checkStockPrice {
             //무조건 한줄단위
             String line = value.toString();
             System.out.println("line : " + line);
-            String stock_code = line.split(",")[4];
+            String stock_code = line.split(",")[16];
 
             Logger log = Logger.getLogger(checkStockPrice.class.getName());
             String[] stock_minute_csv = line.split(",");
@@ -308,33 +309,33 @@ public class checkStockPrice {
 
     public static void main(String[] args) throws Exception {
         String inputFolder = args[0];
-        String outputFolder = args[1];
-//        String dartFolder = args[1];
-//        String outputFolder = args[2];
-//        preprocess(inputFolder, dartFolder, outputFolder);
+//        String outputFolder = args[1];
+        String dartFolder = args[1];
+        String outputFolder = args[2];
+        preprocess(inputFolder, dartFolder, outputFolder);
 
 
-        Configuration conf = new Configuration();
-
-        Job job = Job.getInstance(conf, "checkStockPrice");
-
-        job.setJarByClass(checkStockPrice.class);
-
-        job.setMapperClass(checkStockPrice.MyMapper.class);
-        job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(Text.class);
-
-        job.setReducerClass(checkStockPrice.MyReducer.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
-
-        job.setInputFormatClass(TextInputFormat.class);
-        job.setOutputFormatClass(TextOutputFormat.class);
-
-        FileInputFormat.addInputPath(job,new Path(inputFolder));
-        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
-
-        job.waitForCompletion(true);
+//        Configuration conf = new Configuration();
+//
+//        Job job = Job.getInstance(conf, "checkStockPrice");
+//
+//        job.setJarByClass(checkStockPrice.class);
+//
+//        job.setMapperClass(checkStockPrice.MyMapper.class);
+//        job.setMapOutputKeyClass(Text.class);
+//        job.setMapOutputValueClass(Text.class);
+//
+//        job.setReducerClass(checkStockPrice.MyReducer.class);
+//        job.setOutputKeyClass(Text.class);
+//        job.setOutputValueClass(Text.class);
+//
+//        job.setInputFormatClass(TextInputFormat.class);
+//        job.setOutputFormatClass(TextOutputFormat.class);
+//
+//        FileInputFormat.addInputPath(job,new Path(inputFolder));
+//        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
+//
+//        job.waitForCompletion(true);
 
     }
 }
