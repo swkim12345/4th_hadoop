@@ -316,6 +316,11 @@ public class checkStockVol {
             for (int i = 0; i <= 60; i++)
             {
                 Text value = iterator.next();
+                if (!iterator.hasNext())
+                {
+                    break ;
+                }
+                System.out.println("Text : " + value);
                 String[] line = value.toString().split(",");
                 if (i < 15 && i > 45)
                 {
