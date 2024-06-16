@@ -172,7 +172,6 @@ public class checkStockVol {
                                     start = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 14, 51);
                                     end = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 15, 20);
 
-
                                     inputToList(prev_path, fs, write_list, start, end, hoze, stock_code_format);
                                     start = LocalDateTime.of(year, month, day, 9, 0);
                                     end = LocalDateTime.of(year, month, day, 9, 30);
@@ -352,36 +351,36 @@ public class checkStockVol {
     }
 
     public static void main(String[] args) throws Exception {
-//        String inputFolder = args[0];
-//        String dartFolder = args[1];
-//        String outputFolder = args[2];
-
         String inputFolder = args[0];
-        String outputFolder = args[1];
-//        preprocess(inputFolder, dartFolder, outputFolder);
+        String dartFolder = args[1];
+        String outputFolder = args[2];
 
-        Configuration conf = new Configuration();
+//        String inputFolder = args[0];
+//        String outputFolder = args[1];
+        preprocess(inputFolder, dartFolder, outputFolder);
 
-
-        Job job = Job.getInstance(conf, "checkStockVol");
-
-
-        job.setJarByClass(checkStockVol.class);
-
-        job.setMapperClass(checkStockVol.MyMapper.class);
-        job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(Text.class);
-
-        job.setReducerClass(checkStockVol.MyReducer.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
-
-        job.setInputFormatClass(TextInputFormat.class);
-        job.setOutputFormatClass(TextOutputFormat.class);
-
-        FileInputFormat.addInputPath(job,new Path(inputFolder));
-        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
-
-        job.waitForCompletion(true);
+//        Configuration conf = new Configuration();
+//
+//
+//        Job job = Job.getInstance(conf, "checkStockVol");
+//
+//
+//        job.setJarByClass(checkStockVol.class);
+//
+//        job.setMapperClass(checkStockVol.MyMapper.class);
+//        job.setMapOutputKeyClass(Text.class);
+//        job.setMapOutputValueClass(Text.class);
+//
+//        job.setReducerClass(checkStockVol.MyReducer.class);
+//        job.setOutputKeyClass(Text.class);
+//        job.setOutputValueClass(Text.class);
+//
+//        job.setInputFormatClass(TextInputFormat.class);
+//        job.setOutputFormatClass(TextOutputFormat.class);
+//
+//        FileInputFormat.addInputPath(job,new Path(inputFolder));
+//        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
+//
+//        job.waitForCompletion(true);
     }
 }
