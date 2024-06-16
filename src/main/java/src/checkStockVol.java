@@ -320,6 +320,7 @@ public class checkStockVol {
                     break ;
                 }
                 Text value = iterator.next();
+                System.out.println("Text : " + value);
                 String[] line = value.toString().split(",");
                 if (i < 15 || i > 45)
                 {
