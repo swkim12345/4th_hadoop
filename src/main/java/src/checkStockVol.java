@@ -307,7 +307,7 @@ public class checkStockVol {
 
     private static double stdDeviation(ArrayList<Integer> input)
     {
-        Integer sumInput = input.stream().mapToInt(i -> i).sum();
+        double sumInput = input.stream().mapToInt(i -> i).average().getAsDouble();
         double variance = 0;
         for (Integer i : input)
         {
