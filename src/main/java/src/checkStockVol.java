@@ -58,7 +58,7 @@ public class checkStockVol {
             return (null);
     }
 
-    public static void inputToList(Path path, FileSystem fs, ArrayList<String> write_list, LocalDateTime start, LocalDateTime end, String hoze)
+    public static void inputToList(Path path, FileSystem fs, ArrayList<String> write_list, LocalDateTime start, LocalDateTime end, String hoze, String stock_code)
             throws IOException
     {
         if (path == null || !fs.exists(path))
@@ -75,7 +75,7 @@ public class checkStockVol {
             LocalDateTime cmp = LocalDateTime.of(start.getYear() , start.getMonth(), start.getDayOfMonth(), hour, minute);
 //            System.out.println("cmp + " + cmp);
             if (start.compareTo(cmp) <= 0 && end.compareTo(cmp) >= 0) {
-                write_list.add(read_csv_line + "," + hoze);
+                write_list.add(read_csv_line + "," + hoze + "," + stock_code);
             }
         }
     }
@@ -142,6 +142,8 @@ public class checkStockVol {
                                  * (날짜(20230412)8, (시간 : 090000)9, (현재가)10, (1분간 거래량)14
                                  */
                                 //TODO: Refactoring using format
+                                String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
+
                                 Integer hour = Integer.parseInt(time.split(":")[0]);
                                 Integer minute = Integer.parseInt(time.split(":")[1]);
                                 Integer year = Integer.parseInt(rcept_dt.substring(0, 4));
@@ -171,10 +173,10 @@ public class checkStockVol {
                                     end = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 15, 20);
 
 
-                                    inputToList(prev_path, fs, write_list, start, end, hoze);
+                                    inputToList(prev_path, fs, write_list, start, end, hoze, stock_code_format);
                                     start = LocalDateTime.of(year, month, day, 9, 0);
                                     end = LocalDateTime.of(year, month, day, 9, 30);
-                                    inputToList(now_path, fs, write_list, start, end, hoze);
+                                    inputToList(now_path, fs, write_list, start, end, hoze, stock_code_format);
                                 } else if (hour >= 15 || (hour == 14 && minute > 50))
                                 {
                                     start = LocalDateTime.of(year, month, day, 14, 50);
@@ -184,24 +186,23 @@ public class checkStockVol {
                                     System.out.println(start);
                                     System.out.println(end);
 
-                                    inputToList(now_path, fs, write_list, start, end, hoze);
+                                    inputToList(now_path, fs, write_list, start, end, hoze, stock_code_format);
                                     start = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 0);
                                     end = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 29);
 //                                    //system println
                                     System.out.println(start);
                                     System.out.println(end);
-                                    inputToList(future_path, fs, write_list, start, end, hoze);
+                                    inputToList(future_path, fs, write_list, start, end, hoze, stock_code_format);
                                 }
                                 else{
                                     start = now.minusMinutes(30);
                                     end = now.plusMinutes(30);
-                                    inputToList(now_path, fs, write_list, start, end, hoze);
+                                    inputToList(now_path, fs, write_list, start, end, hoze, stock_code_format);
                                 }
                                 if (write_list.size() != 61)
                                 {
                                     continue;
                                 }
-                                String stock_code_format = String.format("%06d", Integer.parseInt(stock_code));
                                 Path output_file;
                                 for (int i = 0; ; i++)
                                 {
@@ -280,14 +281,7 @@ public class checkStockVol {
                 context_value += now_price.get(i) + "," + amount.get(i) + ",";
             }
             context.write(new Text(stock_code), new Text (context_value));
-//                for (int j = 0; j < 4; j++)
-//                {
-//                    Integer now_price_
-//                    for (int i = 0; i < 15; i++)
-//                    {
-//
-//                    }
-//                }
+
         }
     }
 

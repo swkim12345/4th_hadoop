@@ -309,33 +309,33 @@ public class checkStockPrice {
 
     public static void main(String[] args) throws Exception {
         String inputFolder = args[0];
-//        String outputFolder = args[1];
-        String dartFolder = args[1];
-        String outputFolder = args[2];
-        preprocess(inputFolder, dartFolder, outputFolder);
+        String outputFolder = args[1];
+//        String dartFolder = args[1];
+//        String outputFolder = args[2];
+//        preprocess(inputFolder, dartFolder, outputFolder);
 
 
-//        Configuration conf = new Configuration();
-//
-//        Job job = Job.getInstance(conf, "checkStockPrice");
-//
-//        job.setJarByClass(checkStockPrice.class);
-//
-//        job.setMapperClass(checkStockPrice.MyMapper.class);
-//        job.setMapOutputKeyClass(Text.class);
-//        job.setMapOutputValueClass(Text.class);
-//
-//        job.setReducerClass(checkStockPrice.MyReducer.class);
-//        job.setOutputKeyClass(Text.class);
-//        job.setOutputValueClass(Text.class);
-//
-//        job.setInputFormatClass(TextInputFormat.class);
-//        job.setOutputFormatClass(TextOutputFormat.class);
-//
-//        FileInputFormat.addInputPath(job,new Path(inputFolder));
-//        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
-//
-//        job.waitForCompletion(true);
+        Configuration conf = new Configuration();
+
+        Job job = Job.getInstance(conf, "checkStockPrice");
+
+        job.setJarByClass(checkStockPrice.class);
+
+        job.setMapperClass(checkStockPrice.MyMapper.class);
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(Text.class);
+
+        job.setReducerClass(checkStockPrice.MyReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+
+        job.setInputFormatClass(TextInputFormat.class);
+        job.setOutputFormatClass(TextOutputFormat.class);
+
+        FileInputFormat.addInputPath(job,new Path(inputFolder));
+        FileOutputFormat.setOutputPath(job,new Path(outputFolder));
+
+        job.waitForCompletion(true);
 
     }
 }
