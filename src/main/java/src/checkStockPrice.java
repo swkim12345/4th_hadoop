@@ -251,35 +251,19 @@ public class checkStockPrice {
          * @throws InterruptedException
          */
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            String[] line = value.toString().split("\n");
-            System.out.println("line : " + line[0]);
-            System.out.println("word : " + line[1]);
-            String stock_code = line[0].split(",")[4];
-            ArrayList<Integer> now_price = new ArrayList<>();
-            ArrayList<Integer> amount = new ArrayList<>();
-            Logger log = Logger.getLogger(checkStockPrice.class.getName());
+            //무조건 한줄단위
+            String line = value.toString();
+            System.out.println("line : " + line);
+            String stock_code = line.split(",")[4];
 
-            for (String s : line) {
-                String[] stock_minute_csv = s.split(",");
-                now_price.add(Integer.parseInt(stock_minute_csv[10]));
-                amount.add(Integer.parseInt(stock_minute_csv[14]));
-                System.out.println("now_price : " + now_price + " amount : " + amount);
-//                log.info("now_price : " + now_price + " amount : " + amount);
-            }
-            String context_value = new String();
-            for (int i = 0; i <= 20; i++)
-            {
-                context_value += now_price.get(i) + "," + amount.get(i) + ",";
-            }
+            Logger log = Logger.getLogger(checkStockPrice.class.getName());
+            String[] stock_minute_csv = line.split(",");
+            Integer date = Integer.parseInt(stock_minute_csv[8]);
+            Integer time = Integer.parseInt(stock_minute_csv[9]);
+            Integer now_price = Integer.parseInt(stock_minute_csv[10]);
+//            Integer amount = Integer.parseInt(stock_minute_csv[14]);
+            String context_value = date + "," + time + "," + now_price;
             context.write(new Text(stock_code), new Text (context_value));
-//                for (int j = 0; j < 4; j++)
-//                {
-//                    Integer now_price_
-//                    for (int i = 0; i < 15; i++)
-//                    {
-//
-//                    }
-//                }
         }
     }
 
@@ -298,17 +282,18 @@ public class checkStockPrice {
         protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             ArrayList<Integer> before_stock_price = new ArrayList<>();
             ArrayList<Integer> after_stock_price = new ArrayList<>();
-            for (Text value : values) {
+//            for (Text value : values) {
+            for (int i = 0; i <= 20; i++)
+            {
+                Text value = values.iterator().next();
                 String[] line = value.toString().split(",");
-                for (int i = 0; i < line.length; i++) {
-                    if (i <= 10)
-                    {
-                        before_stock_price.add(Integer.parseInt(line[i]));
-                    }
-                    else
-                    {
-                        after_stock_price.add(Integer.parseInt(line[i]));
-                    }
+                if (i <= 10)
+                {
+                    before_stock_price.add(Integer.parseInt(line[2]));
+                }
+                else
+                {
+                    after_stock_price.add(Integer.parseInt(line[2]));
                 }
             }
             System.out.println("after_stock price : " + after_stock_price);
