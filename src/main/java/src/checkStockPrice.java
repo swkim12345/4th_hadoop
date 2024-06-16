@@ -256,15 +256,16 @@ public class checkStockPrice {
             //무조건 한줄단위
             String line = value.toString();
             System.out.println("line : " + line);
-            String stock_code = line.split(",")[16];
 
             Logger log = Logger.getLogger(checkStockPrice.class.getName());
             String[] stock_minute_csv = line.split(",");
+            String stock_code = stock_minute_csv[16];
             Integer date = Integer.parseInt(stock_minute_csv[8]);
             Integer time = Integer.parseInt(stock_minute_csv[9]);
             Integer now_price = Integer.parseInt(stock_minute_csv[10]);
+            String hoze = stock_minute_csv[15];
 //            Integer amount = Integer.parseInt(stock_minute_csv[14]);
-            String context_value = date + "," + time + "," + now_price;
+            String context_value = date + "," + time + "," + now_price + "," + hoze;
             context.write(new Text(stock_code), new Text (context_value));
         }
     }
@@ -284,6 +285,7 @@ public class checkStockPrice {
         protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             ArrayList<Integer> before_stock_price = new ArrayList<>();
             ArrayList<Integer> after_stock_price = new ArrayList<>();
+            String hoze = new String();
             Iterator<Text> value_iter =  values.iterator();
 //            for (Text value : values) {
             for (int i = 0; i <= 20; i++)
@@ -291,6 +293,8 @@ public class checkStockPrice {
                 Text value = value_iter.next();
                 System.out.println("value : " + value);
                 String[] line = value.toString().split(",");
+                if (i == 0)
+                    hoze += line[3];
                 System.out.println("date : " + line[0] + " " + line[1]);
                 if (i <= 10)
                 {
@@ -303,7 +307,16 @@ public class checkStockPrice {
             }
             double before_stock_price_avg = before_stock_price.stream().mapToInt(i -> i).average().getAsDouble();
             double after_stock_price_avg = after_stock_price.stream().mapToInt(i -> i).average().getAsDouble();
-            context.write(key, new Text(before_stock_price_avg + "," + after_stock_price_avg + "\n"));
+            String stock_hoze = new String();
+            if (before_stock_price_avg > after_stock_price_avg)
+            {
+                stock_hoze += "FALSE";
+            }
+            else
+            {
+                stock_hoze += "TRUE";
+            }
+            context.write(key, new Text(stock_hoze + "," + hoze +  "\n"));
         }
     }
 
