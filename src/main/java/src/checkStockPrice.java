@@ -259,11 +259,11 @@ public class checkStockPrice {
 
             Logger log = Logger.getLogger(checkStockPrice.class.getName());
             String[] stock_minute_csv = line.split(",");
-            String stock_code = stock_minute_csv[16];
+            String stock_code = stock_minute_csv[17];
             Integer date = Integer.parseInt(stock_minute_csv[8]);
             Integer time = Integer.parseInt(stock_minute_csv[9]);
             Integer now_price = Integer.parseInt(stock_minute_csv[10]);
-            String hoze = stock_minute_csv[15];
+            String hoze = stock_minute_csv[16];
 //            Integer amount = Integer.parseInt(stock_minute_csv[14]);
             String context_value = date + "," + time + "," + now_price + "," + hoze;
             context.write(new Text(stock_code), new Text (context_value));
@@ -291,11 +291,11 @@ public class checkStockPrice {
             for (int i = 0; i <= 20; i++)
             {
                 Text value = value_iter.next();
-                System.out.println("value : " + value);
+//                System.out.println("value : " + value);
                 String[] line = value.toString().split(",");
                 if (i == 0)
                     hoze += line[3];
-                System.out.println("date : " + line[0] + " " + line[1]);
+//                System.out.println("date : " + line[0] + " " + line[1]);
                 if (i <= 10)
                 {
                     before_stock_price.add(Integer.parseInt(line[2]));
@@ -316,7 +316,7 @@ public class checkStockPrice {
             {
                 stock_hoze += "TRUE";
             }
-            context.write(key, new Text(stock_hoze + "," + hoze +  "\n"));
+            context.write(key, new Text(stock_hoze + "," + hoze));
         }
     }
 
