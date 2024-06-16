@@ -251,6 +251,7 @@ public class checkStockPrice {
          */
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String[] line = value.toString().split("\n");
+            System.out.println("line : " + line);
             String hoze = line[0].split(",")[0];
             String stock_code = line[0].split(",")[1];
             ArrayList<Integer> now_price = new ArrayList<>();
@@ -262,10 +263,10 @@ public class checkStockPrice {
                 }
                 now_price.add(Integer.parseInt(stock_minute_csv[10]));
                 amount.add(Integer.parseInt(stock_minute_csv[14]));
-
+                System.out.println("now_price : " + now_price + " amount : " + amount);
             }
             String context_value = new String();
-            for (int i = 0; i < 60; i++)
+            for (int i = 0; i <= 20; i++)
             {
                 context_value += now_price.get(i) + "," + amount.get(i) + ",";
             }
