@@ -15,6 +15,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.time.DayOfWeek;
@@ -251,11 +252,13 @@ public class checkStockPrice {
          */
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String[] line = value.toString().split("\n");
-            System.out.println("line : " + line);
+//            System.out.println("line : " + line);
             String hoze = line[0].split(",")[0];
             String stock_code = line[0].split(",")[1];
             ArrayList<Integer> now_price = new ArrayList<>();
             ArrayList<Integer> amount = new ArrayList<>();
+            static Logger log = Logger.getLogger(checkStockPrice.class.getName());
+
             for (String s : line) {
                 String[] stock_minute_csv = s.split(",");
                 if (hoze.equals(stock_minute_csv[0])) {
@@ -263,7 +266,8 @@ public class checkStockPrice {
                 }
                 now_price.add(Integer.parseInt(stock_minute_csv[10]));
                 amount.add(Integer.parseInt(stock_minute_csv[14]));
-                System.out.println("now_price : " + now_price + " amount : " + amount);
+//                System.out.println("now_price : " + now_price + " amount : " + amount);
+                log.info("now_price : " + now_price + " amount : " + amount);
             }
             String context_value = new String();
             for (int i = 0; i <= 20; i++)
