@@ -254,21 +254,17 @@ public class checkStockPrice {
             String[] line = value.toString().split("\n");
             System.out.println("line : " + line[0]);
             System.out.println("word : " + line[1]);
-            String hoze = line[0].split(",")[0];
-            String stock_code = line[0].split(",")[1];
+            String stock_code = line[0].split(",")[4];
             ArrayList<Integer> now_price = new ArrayList<>();
             ArrayList<Integer> amount = new ArrayList<>();
             Logger log = Logger.getLogger(checkStockPrice.class.getName());
 
             for (String s : line) {
                 String[] stock_minute_csv = s.split(",");
-                if (hoze.equals(stock_minute_csv[0])) {
-                    continue;
-                }
                 now_price.add(Integer.parseInt(stock_minute_csv[10]));
                 amount.add(Integer.parseInt(stock_minute_csv[14]));
-//                System.out.println("now_price : " + now_price + " amount : " + amount);
-                log.info("now_price : " + now_price + " amount : " + amount);
+                System.out.println("now_price : " + now_price + " amount : " + amount);
+//                log.info("now_price : " + now_price + " amount : " + amount);
             }
             String context_value = new String();
             for (int i = 0; i <= 20; i++)

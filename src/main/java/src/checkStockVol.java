@@ -266,7 +266,7 @@ public class checkStockVol {
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String[] line = value.toString().split("\n");
             String[] splited_line = line[0].split(",");
-            String stock_code = splited_line[1];
+            String stock_code = splited_line[4];
             ArrayList<Integer> now_price = new ArrayList<>();
             ArrayList<Integer> amount = new ArrayList<>();
             for (String s : line) {
