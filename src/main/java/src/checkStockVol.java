@@ -21,6 +21,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class checkStockVol {
     final private int period = 30;
@@ -264,21 +265,14 @@ public class checkStockVol {
          * @throws InterruptedException
          */
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            String[] line = value.toString().split("\n");
-            String[] splited_line = line[0].split(",");
-            String stock_code = splited_line[4];
-            ArrayList<Integer> now_price = new ArrayList<>();
-            ArrayList<Integer> amount = new ArrayList<>();
-            for (String s : line) {
-                String[] stock_minute_csv = s.split(",");
-                now_price.add(Integer.parseInt(stock_minute_csv[10]));
-                amount.add(Integer.parseInt(stock_minute_csv[14]));
-            }
-            String context_value = new String();
-            for (int i = 0; i <= 60; i++)
-            {
-                context_value += now_price.get(i) + "," + amount.get(i) + ",";
-            }
+            String[] line = value.toString().split(",");
+            String stock_code = line[17];
+            Integer date = Integer.parseInt(line[8]);
+            Integer time = Integer.parseInt(line[9]);
+            Integer now_price = Integer.parseInt(line[10]);
+            Integer amount = Integer.parseInt(line[14]);
+
+            String context_value = date + "," + time + "," + now_price + "," + amount;
             context.write(new Text(stock_code), new Text (context_value));
 
         }
@@ -318,30 +312,23 @@ public class checkStockVol {
             ArrayList<Integer> before_stock_amount = new ArrayList<>();
             ArrayList<Integer> after_stock_amount = new ArrayList<>();
 
-            for (Text value : values) {
-                //홀수에 가격, 짝수에 변동량
+            Iterator<Text> iterator = values.iterator();
+            for (int i = 0; i <= 60; i++)
+            {
+                Text value = iterator.next();
                 String[] line = value.toString().split(",");
-                for (int i = 0; i < line.length; i++)
+                if (i < 15 && i >= 45)
                 {
-                    if (i % 2 == 0)
-                    {
-                        if (i / 2 >= 15 && i / 2 < 45)
-                            before_stock_price.add(Integer.parseInt(line[i]));
-                        else
-                            after_stock_price.add(Integer.parseInt(line[i]));
-                    }
-                    else
-                    {
-                        if (i / 2 >= 15 && i / 2 < 45)
-                            before_stock_amount.add(Integer.parseInt(line[i]));
-                        else
-                            after_stock_amount.add(Integer.parseInt(line[i]));
-                    }
+
+                }
+                else
+                {
+
                 }
             }
             double stock_amount_deviation = stdDeviation(after_stock_amount) / stdDeviation(before_stock_amount);
             double stock_price_deviation = stdDeviation(after_stock_price) / stdDeviation(before_stock_price);
-            context.write(key, new Text(stock_amount_deviation + "," + stock_price_deviation + "\n"));
+            context.write(key, new Text(stock_amount_deviation + "," + stock_price_deviation));
         }
 
         /**
