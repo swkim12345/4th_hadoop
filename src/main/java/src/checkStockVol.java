@@ -141,6 +141,7 @@ public class checkStockVol {
                                  * prdy_vrss,prdy_vrss_sign,prdy_ctrt,stck_prdy_clpr,acml_vol,acml_tr_pbmn,hts_kor_isnm,stck_prpr,stck_bsop_date,stck_cntg_hour,stck_prpr,stck_oprc,stck_hgpr,stck_lwpr,cntg_vol,acml_tr_pbmn
                                  * (날짜(20230412)8, (시간 : 090000)9, (현재가)10, (1분간 거래량)14
                                  */
+                                //TODO: Refactoring using format
                                 Integer hour = Integer.parseInt(time.split(":")[0]);
                                 Integer minute = Integer.parseInt(time.split(":")[1]);
                                 Integer year = Integer.parseInt(rcept_dt.substring(0, 4));
@@ -248,7 +249,6 @@ public class checkStockVol {
      */
     public static class MyMapper
             extends Mapper<Object, Text, Text, Text> {
-        private Text word = new Text();
 
         /**
          * 분봉 csv파일 형식
@@ -275,7 +275,7 @@ public class checkStockVol {
                 amount.add(Integer.parseInt(stock_minute_csv[14]));
             }
             String context_value = new String();
-            for (int i = 0; i < 60; i++)
+            for (int i = 0; i <= 60; i++)
             {
                 context_value += now_price.get(i) + "," + amount.get(i) + ",";
             }
@@ -369,8 +369,7 @@ public class checkStockVol {
         Configuration conf = new Configuration();
 
 
-
-        Job job = Job.getInstance(conf, "preprocess");
+        Job job = Job.getInstance(conf, "checkStockVol");
 
 
         job.setJarByClass(checkStockVol.class);

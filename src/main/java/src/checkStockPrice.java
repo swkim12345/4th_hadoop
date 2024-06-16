@@ -309,6 +309,7 @@ public class checkStockPrice {
                     }
                 }
             }
+            System.out.println("after_stock price : " + after_stock_price);
             double before_stock_price_avg = before_stock_price.stream().mapToInt(i -> i).average().getAsDouble();
             double after_stock_price_avg = after_stock_price.stream().mapToInt(i -> i).average().getAsDouble();
             context.write(key, new Text(before_stock_price_avg + "," + after_stock_price_avg + "\n"));
