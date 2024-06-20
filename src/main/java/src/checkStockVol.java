@@ -1,12 +1,9 @@
-//package src;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -24,8 +21,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class checkStockVol {
-    final private int period = 30;
-
     public static boolean isWeekday(LocalDateTime dateTime) {
         DayOfWeek dayOfWeek = dateTime.getDayOfWeek();
         return (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY);
@@ -74,7 +69,6 @@ public class checkStockVol {
             Integer hour = Integer.parseInt(time.substring(0, 2));
             Integer minute = Integer.parseInt(time.substring(2, 4));
             LocalDateTime cmp = LocalDateTime.of(start.getYear() , start.getMonth(), start.getDayOfMonth(), hour, minute);
-//            System.out.println("cmp + " + cmp);
             if (start.compareTo(cmp) <= 0 && end.compareTo(cmp) >= 0) {
                 write_list.add(read_csv_line + "," + hoze + "," + stock_code);
             }
@@ -114,8 +108,6 @@ public class checkStockVol {
                         //첫번째의 경우는 스킵.
                         String line = br.readLine();
                         while ((line = br.readLine()) != null) {
-//                            System.out.println(line);
-                            //combined_output.csv v파일 구조
                             /**
                              * 주식코드
                              * corp_code, corp_name, stock_code, report_num, rcept_no, recpt_dt, time, 호재성
@@ -134,9 +126,6 @@ public class checkStockVol {
                             }
                             else {
                                 ArrayList<String> write_list = new ArrayList<>();
-                                /**
-                                 * 날짜, 시간, 파일 이름순
-                                 */
                                 /**
                                  * 분봉 csv파일 형식
                                  * prdy_vrss,prdy_vrss_sign,prdy_ctrt,stck_prdy_clpr,acml_vol,acml_tr_pbmn,hts_kor_isnm,stck_prpr,stck_bsop_date,stck_cntg_hour,stck_prpr,stck_oprc,stck_hgpr,stck_lwpr,cntg_vol,acml_tr_pbmn
@@ -168,8 +157,7 @@ public class checkStockVol {
                                 LocalDateTime start;
                                 LocalDateTime end;
 
-                                //TODO: refactoring more efficiently
-                                if (hour < 9 || (hour == 9 && minute < 30)) { //전날
+                                if (hour < 9 || (hour == 9 && minute < 30)) {
                                     start = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 14, 51);
                                     end = LocalDateTime.of(year, prev_now.getMonth(), prev_now.getDayOfMonth(), 15, 20);
 
@@ -181,17 +169,10 @@ public class checkStockVol {
                                 {
                                     start = LocalDateTime.of(year, month, day, 14, 50);
                                     end = LocalDateTime.of(year, month, day, 15, 20);
-
-//                                    //system println
-                                    System.out.println(start);
-                                    System.out.println(end);
-
                                     inputToList(now_path, fs, write_list, start, end, hoze, stock_code_format);
+
                                     start = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 0);
                                     end = LocalDateTime.of(year, future_now.getMonth(), future_now.getDayOfMonth(), 9, 29);
-//                                    //system println
-                                    System.out.println(start);
-                                    System.out.println(end);
                                     inputToList(future_path, fs, write_list, start, end, hoze, stock_code_format);
                                 }
                                 else{
@@ -227,43 +208,15 @@ public class checkStockVol {
                 }
             }
         }
-//        outputStream.close();
         fs.close();
     }
 
     /**
-     * Mapper 상속 후 제너럴 클래스 타입 결정
-     * 파일 구조 :
-     * (호재 - 1, 악재 - 0)
-     * (csv파일 형식으로 되어 있는 60줄짜리 파일 형식)
-     * 엔터가 두번 나오기 전까지 각 줄은 dart에서 가져온 전처리된 자료
-     * 이후 시간이작성되어 있는 csv파일 형식을 따름
-     * MyMapper : 하나의 엔터당 하나의 Context가 나오게 됨.
-     * 전체 파일을 스캔하면서 context에 하나씩 작성.
-     * key : company code
-     * value : 0: 30분 이내의 데이터를 시간정보와 함께 직렬화, 구분은 :으로
-     *  1: 첫번째 줄 값 -> False, True , stockcode =>파싱 후 stock_code를 키값으로
-     *  2 : 두번째줄부터 읽은 다음, 계산 -> 앞의 줄 15줄과 중간 15줄 / 중간 15줄과 마지막 15줄을 가지고 분석
-     *  2-a : 분석시 두가지 분석 -> 거래량 변화의 평균값, 가격의 변동량
-     *  3 : 총 8가지 값이 나옴 -> key : stock code , value : 거래량 변화, 가격변동 * 4
-     *  4 : context에 작성
+     * Mapper
      */
     public static class MyMapper
             extends Mapper<Object, Text, Text, Text> {
 
-        /**
-         * 분봉 csv파일 형식
-         * prdy_vrss,prdy_vrss_sign,prdy_ctrt,stck_prdy_clpr,acml_vol,acml_tr_pbmn,hts_kor_isnm,stck_prpr,stck_bsop_date,stck_cntg_hour,stck_prpr,stck_oprc,stck_hgpr,stck_lwpr,cntg_vol,acml_tr_pbmn
-         * (날짜(20230412)8, (시간 : 090000)9, (현재가)10, (1분간 거래량)14
-         */
-        /**
-         * 실제 파일 형식 - 호재,stock_code
-         * @param key
-         * @param value
-         * @param context
-         * @throws IOException
-         * @throws InterruptedException
-         */
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String[] line = value.toString().split(",");
             String stock_code = line[17];
@@ -280,18 +233,7 @@ public class checkStockVol {
 
     /**
      * Reducer
-     * Context : 호재, 악재가 key값, value의 경우 공시가 발행된 앞 뒤 60분간격의  csv파일이 한 value마다 작성되어 있음.
-     * 각각의 줄을 모으고, 60 ~ 30 / 30 ~ 0 ~ 30 / 30 ~ 60까지의 데이터로 전처리함.
-     * 이 줄들을 분석한 다음, 변동률, 수익률을 가지고 나이브한 형식으로 value에 작성함.
-     * output : key : dart에서 분석한 호재, 악재, value : 주식 가격의 변동률, 수익률, 얼마나 작용한지
-     * 1. value : now_price,amount, ... (60개)
-     * 1-a. key, values 중 각각의 값을 비교해 변동값을 계산함.
-     * 3. key : stock_code / value : 가격 변동률, 거래량 변동률 (30분간의 변동률(%)와 내부 30분간의 변동률(%)를 가지고 서로 비교해 백분율로 표시하게 됨.)
      */
-    /**
-     * 표준편차의 차이를 %로 구하자.
-     */
-
     private static double stdDeviation(ArrayList<Integer> input)
     {
         double sumInput = input.stream().mapToInt(i -> i).average().getAsDouble();
@@ -333,15 +275,8 @@ public class checkStockVol {
                     before_stock_amount.add(Integer.parseInt(line[3]));
                 }
             }
-//            double stock_amount_deviation = stdDeviation(after_stock_amount) / stdDeviation(before_stock_amount);
-//            double stock_price_deviation = stdDeviation(after_stock_price) / stdDeviation(before_stock_price);
             context.write(key, new Text(stdDeviation(before_stock_amount) + "," + stdDeviation(after_stock_amount) + "," + stdDeviation(before_stock_price) + "," +  stdDeviation(after_stock_price)));
         }
-
-        /**
-         * Afterprocessing
-         * 1. 구현하지 않는다.
-         */
     }
 
     public static void main(String[] args) throws Exception {
