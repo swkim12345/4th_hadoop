@@ -1,12 +1,9 @@
-//package src;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -25,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class checkStockPrice {
-    final private int period = 30;
-
     public static boolean isWeekday(LocalDateTime dateTime) {
         DayOfWeek dayOfWeek = dateTime.getDayOfWeek();
         return (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY);
@@ -111,8 +106,6 @@ public class checkStockPrice {
                         //첫번째의 경우는 스킵.
                         String line = br.readLine();
                         while ((line = br.readLine()) != null) {
-//                            System.out.println(line);
-                            //combined_output.csv v파일 구조
                             /**
                              * 주식코드
                              * corp_code, corp_name, stock_code, report_num, rcept_no, recpt_dt, time, 호재성
@@ -214,57 +207,27 @@ public class checkStockPrice {
                 }
             }
         }
-//        outputStream.close();
         fs.close();
     }
 
     /**
      * Mapper 상속 후 제너럴 클래스 타입 결정
-     * 파일 구조 :
-     * (호재 - 1, 악재 - 0)
-     * (csv파일 형식으로 되어 있는 60줄짜리 파일 형식)
-     * 엔터가 두번 나오기 전까지 각 줄은 dart에서 가져온 전처리된 자료
-     * 이후 시간이작성되어 있는 csv파일 형식을 따름
-     * MyMapper : 하나의 엔터당 하나의 Context가 나오게 됨.
-     * 전체 파일을 스캔하면서 context에 하나씩 작성.
-     * key : company code
-     * value : 0: 30분 이내의 데이터를 시간정보와 함께 직렬화, 구분은 :으로
-     *  1: 첫번째 줄 값 -> False, True , stockcode =>파싱 후 stock_code를 키값으로
-     *  2 : 두번째줄부터 읽은 다음, 계산 -> 앞의 줄 15줄과 중간 15줄 / 중간 15줄과 마지막 15줄을 가지고 분석
-     *  2-a : 분석시 두가지 분석 -> 거래량 변화의 평균값, 가격의 변동량
-     *  3 : 총 8가지 값이 나옴 -> key : stock code , value : 거래량 변화, 가격변동 * 4
-     *  4 : context에 작성
+     */
+    /**
+     * 분봉 csv파일 형식
+     * prdy_vrss,prdy_vrss_sign,prdy_ctrt,stck_prdy_clpr,acml_vol,acml_tr_pbmn,hts_kor_isnm,stck_prpr,stck_bsop_date,stck_cntg_hour,stck_prpr,stck_oprc,stck_hgpr,stck_lwpr,cntg_vol,acml_tr_pbmn
+     * (날짜(20230412)8, (시간 : 090000)9, (현재가)10, (1분간 거래량)14
      */
     public static class MyMapper
             extends Mapper<Object, Text, Text, Text> {
-        private Text word = new Text();
-
-        /**
-         * 분봉 csv파일 형식
-         * prdy_vrss,prdy_vrss_sign,prdy_ctrt,stck_prdy_clpr,acml_vol,acml_tr_pbmn,hts_kor_isnm,stck_prpr,stck_bsop_date,stck_cntg_hour,stck_prpr,stck_oprc,stck_hgpr,stck_lwpr,cntg_vol,acml_tr_pbmn
-         * (날짜(20230412)8, (시간 : 090000)9, (현재가)10, (1분간 거래량)14
-         */
-        /**
-         * 실제 파일 형식 - 호재,stock_code
-         * @param key
-         * @param value
-         * @param context
-         * @throws IOException
-         * @throws InterruptedException
-         */
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            //무조건 한줄단위
             String line = value.toString();
-            System.out.println("line : " + line);
-
-            Logger log = Logger.getLogger(checkStockPrice.class.getName());
             String[] stock_minute_csv = line.split(",");
             String stock_code = stock_minute_csv[17];
             Integer date = Integer.parseInt(stock_minute_csv[8]);
             Integer time = Integer.parseInt(stock_minute_csv[9]);
             Integer now_price = Integer.parseInt(stock_minute_csv[10]);
             String hoze = stock_minute_csv[16];
-//            Integer amount = Integer.parseInt(stock_minute_csv[14]);
             String context_value = date + "," + time + "," + now_price + "," + hoze;
             context.write(new Text(stock_code), new Text (context_value));
         }
@@ -287,15 +250,12 @@ public class checkStockPrice {
             ArrayList<Integer> after_stock_price = new ArrayList<>();
             String hoze = new String();
             Iterator<Text> value_iter =  values.iterator();
-//            for (Text value : values) {
             for (int i = 0; i <= 20; i++)
             {
                 Text value = value_iter.next();
-//                System.out.println("value : " + value);
                 String[] line = value.toString().split(",");
                 if (i == 0)
                     hoze += line[3];
-//                System.out.println("date : " + line[0] + " " + line[1]);
                 if (i >= 10)
                 {
                     before_stock_price.add(Integer.parseInt(line[2]));
